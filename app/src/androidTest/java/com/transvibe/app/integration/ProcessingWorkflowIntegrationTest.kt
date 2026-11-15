@@ -162,13 +162,7 @@ class ProcessingWorkflowIntegrationTest {
         File(context.cacheDir, "transvibe-integration-${UUID.randomUUID()}-$name")
             .also { testFiles += it }
 
-    private fun testFile(name: String): File =
-        File(context.cacheDir, "transvibe-integration-${UUID.randomUUID()}-$name")
-            .also { testFiles += it }
 
-    private fun testFile(name: String): File =
-        File(context.cacheDir, "transvibe-integration-${UUID.randomUUID()}-$name")
-            .also { testFiles += it }
 
     private fun openDatabase() {
         db = TransVibeDatabase.createNamedForTests(context, dbName)
