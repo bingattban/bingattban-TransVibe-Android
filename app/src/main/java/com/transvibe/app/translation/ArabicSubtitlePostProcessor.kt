@@ -22,10 +22,11 @@ object ArabicSubtitlePostProcessor {
             .trim()
 
         value = value
-            .replace(Regex("\\s+([،؛:؟.!…])"), "$1")
-            .replace(Regex("([،؛:؟.!…])(?=[\\p{L}\\p{N}])"), "$1 ")
+            // Convert western marks before trimming spaces preceding Arabic punctuation.
             .replace(Regex("[?]+"), "؟")
             .replace(Regex(",+"), "،")
+            .replace(Regex("\\s+([،؛:؟.!…])"), "$1")
+            .replace(Regex("([،؛:؟.!…])(?=[\\p{L}\\p{N}])"), "$1 ")
             .replace(Regex("؛{2,}"), "؛")
             .replace(Regex("،{2,}"), "،")
             .replace(Regex("؟{2,}"), "؟")
