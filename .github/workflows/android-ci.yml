@@ -93,7 +93,24 @@ jobs:
         run: bash ci/download_verified_aars.sh
       - name: Gradle unit tests and lint (must pass before packaging)
         run: |
-          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
+          if ! ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug; then
+            echo "::group::All Android Lint diagnostics"
+            find app/build -type f -name 'lint-results-*.txt' -print -exec cat {} \;
+            find app/build -type f -name 'lint-results-*.xml' -print
+            echo "::endgroup::"
+            exit 1
+          fi
+      - name: Preserve test and lint reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-android-diagnostics
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-*
+            app/build/intermediates/lint_intermediate_text_report/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Build debug app and instrumentation APKs only after tests
         run: |
           ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
