@@ -91,6 +91,13 @@ jobs:
           FFMPEG_AAR_URL: ${{ vars.FFMPEG_AAR_URL }}
           FFMPEG_AAR_SHA256: ${{ vars.FFMPEG_AAR_SHA256 }}
         run: bash ci/download_verified_aars.sh
+      - name: Exclude Code On The Go-only debug manifest provider from CI
+        run: |
+          # The LogSenderInstaller provider is injected by Code On The Go on-device.
+          # It is not a dependency of regular Android Gradle builds on GitHub.
+          test -f app/src/debug/AndroidManifest.xml
+          grep -q 'com.itsaky.androidide.logsender.utils.LogSenderInstaller' app/src/debug/AndroidManifest.xml
+          rm app/src/debug/AndroidManifest.xml
       - name: Gradle unit tests and lint (must pass before packaging)
         run: |
           if ! ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug; then
