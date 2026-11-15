@@ -122,7 +122,10 @@ class LightweightVoiceActivityDetector(
             )
             if (shouldClose) {
                 val speechFrameCount = lastSpeech - runStart + 1
-                if (speechFrameCount >= minimumFrames) {
+                // Smoothing can extend isolated <120 ms transients to the minimum duration.
+                // Require sufficient genuine candidate support before padding/hangover.
+                val supportedFrames = (runStart..lastSpeech).count { candidate[it] }
+                if (speechFrameCount >= minimumFrames && supportedFrames >= minimumFrames) {
                     val rawStart = runStart * frameSamples
                     val rawEnd = minOf(samples.size, (lastSpeech + 1) * frameSamples)
                     val paddedStart = maxOf(0, rawStart - paddingSamples)
