@@ -10,8 +10,8 @@ class SubtitleExporterTest {
     @Test
     fun srt_isOrderedNumberedUtf8PlainTextAndUsesCommaMillis() {
         val input = listOf(
-            SubtitleSegment(2, 8_100, 10_000, "ثانٍ", arabicText = "ثانٍ"),
-            SubtitleSegment(1, 5_250, 8_100, "مرحباً بكم", arabicText = "مرحباً بكم")
+            SubtitleSegment(2, 8_100, 10_000, "ثانٍ", translatedText = "ثانٍ"),
+            SubtitleSegment(1, 5_250, 8_100, "مرحباً بكم", translatedText = "مرحباً بكم")
         )
         val value = SubtitleExporter.formatSrt(input)
         val expected = "1\r\n00:00:05,250 --> 00:00:08,100\r\nمرحباً بكم\r\n\r\n" +
@@ -22,7 +22,7 @@ class SubtitleExporterTest {
 
     @Test
     fun webVtt_hasHeaderDotMillisAndCleanText() {
-        val input = listOf(SubtitleSegment(1, 5_250, 8_100, " x ", arabicText = " مرحباً\u0000 بكم "))
+        val input = listOf(SubtitleSegment(1, 5_250, 8_100, " x ", translatedText = " مرحباً\u0000 بكم "))
         val value = SubtitleExporter.formatVtt(input)
         assertTrue(value.startsWith("WEBVTT\r\n\r\n"))
         assertTrue(value.contains("00:00:05.250 --> 00:00:08.100"))
