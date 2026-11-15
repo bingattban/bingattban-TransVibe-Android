@@ -3,7 +3,7 @@
 set -euo pipefail
 mkdir -p app/libs
 get_aar() {
-  local name="$1" url="$2" hash="$3" dest="app/libs/$1"
+  local name="$1" url="$2" hash="$3" library="$4" dest="app/libs/$1"
   if [[ -z "$url" || -z "$hash" ]]; then
     echo "::error::Missing verified URL/SHA256 for $name. Never substitute another library."
     exit 2
@@ -15,26 +15,26 @@ get_aar() {
   if [[ -f "$dest" ]]; then
     echo "Checking preinstalled $name"
   else
-    curl -fL --retry 3 --connect-timeout 20 --max-time 900 "$url" -o "$dest"
+    if ! curl -fLSs --retry 3 --connect-timeout 20 --max-time 900 "$url" -o "${dest}.partial"; then
+      rm -f "${dest}.partial"
+      echo "::error::Failed to download $name from $url" >&2
+      exit 2
+    fi
+    mv "${dest}.partial" "$dest"
   fi
-  printf '%s  %s\n' "$hash" "$dest" | sha256sum --check --status || {
-    echo "::error::SHA256 mismatch for $name; refusing to build."; exit 3;
-  }
-  python3 - "$dest" <<'PYCODE'
-import sys,zipfile
-p=sys.argv[1]
-with zipfile.ZipFile(p) as z:
-    assert z.getinfo('AndroidManifest.xml'), 'Not a valid Android AAR'
-print('Verified:', p)
-PYCODE
+  python3 tools/verify_ci_aar.py "$dest" --sha256 "$hash" --native-lib "$library"
 }
 
 # Upstream Sherpa-ONNX v1.13.5 binary; hash from release mirror, verified after download.
 get_aar 'sherpa-onnx-1.13.5.aar' \
   "${SHERPA_AAR_URL:-https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.5/sherpa-onnx-1.13.5.aar}" \
-  "${SHERPA_AAR_SHA256:-6419cd8bc983e0c4fab06067f0fe0313fdc0f7103818ac1e7a08d50787b7a82b}"
+  "${SHERPA_AAR_SHA256:-6419cd8bc983e0c4fab06067f0fe0313fdc0f7103818ac1e7a08d50787b7a82b}" \
+  'libsherpa-onnx-jni.so'
 
-# This exact FFmpegKit binary was used by the owner's Code On The Go build.
-# Its provenance and SHA256 have NOT been provided. Do not replace silently.
+# AAR supplied by the owner on 2026-11-15: digest confirmed locally.
+# Historical third-party Maven mirror; SHA-256 must match original uploaded bytes.
+# Do not replace with a different FFmpegKit release. GPL-3.0 licensing applies.
 get_aar 'ffmpeg-kit-min-gpl-6.0-2.aar' \
-  "${FFMPEG_AAR_URL:-}" "${FFMPEG_AAR_SHA256:-}"
+  "${FFMPEG_AAR_URL:-https://artifactory.appodeal.com/appodeal-public/com/arthenica/ffmpeg-kit-min-gpl/6.0-2/ffmpeg-kit-min-gpl-6.0-2.aar}" \
+  "${FFMPEG_AAR_SHA256:-11c1fd0ef76edb91fb3b7a1d6d0619914c914126896397367813f87805644c82}" \
+  'libffmpegkit.so'
