@@ -52,7 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -214,7 +214,7 @@ private fun TranslationPacksPage(
     packStorage: com.transvibe.app.domain.model.TranslationPackStorage,
     installed: List<LanguageCode>
 ) {
-    val displayLocale = LocalContext.current.resources.configuration.locales[0] ?: Locale.forLanguageTag("ar")
+    val displayLocale = LocalConfiguration.current.locales[0] ?: Locale.forLanguageTag("ar")
     val visiblePacks = buildList {
         add(LanguageCode.ARABIC)
         add(LanguageCode.ENGLISH)
@@ -641,7 +641,7 @@ private fun FastAsrModelCard(vm: ModelsViewModel, model: FastAsrModelInfo) {
                 )
             }
             Text(
-                text = if (LocalContext.current.resources.configuration.locales[0].language == "en") {
+                text = if (LocalConfiguration.current.locales[0].language == "en") {
                     stringResource(R.string.model_fast_description_generic)
                 } else model.descriptionAr,
                 style = MaterialTheme.typography.bodyMedium,
@@ -921,7 +921,7 @@ private fun TranslationPackCard(
 
 @Composable
 private fun modelDescription(model: WhisperModel): String =
-    if (LocalContext.current.resources.configuration.locales[0].language == "en") {
+    if (LocalConfiguration.current.locales[0].language == "en") {
         stringResource(R.string.model_whisper_description_generic, model.displayName)
     } else model.descriptionAr
 
