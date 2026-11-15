@@ -1,13 +1,21 @@
 package com.transvibe.app.media.decoder
 
 import android.net.Uri
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
-@Suppress("DEPRECATION")
-class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class AudioDecoderTimelineInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
 
+    @Test
     fun testAac44100MonoPreservesNonZeroMediaStartPts() = runBlocking {
         val file = copyFixture("audio_timeline/aac_44100_mono_offset.m4a")
         val chunks = decode(file)
@@ -16,6 +24,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
         assertTrue("Expected media-clock start near 1226 ms but was ${chunks.first().startMs}", chunks.first().startMs in 1_180L..1_280L)
     }
 
+    @Test
     fun testAac48000StereoSplitsTimestampDiscontinuity() = runBlocking {
         val file = copyFixture("audio_timeline/aac_48000_stereo_gap.m4a")
         val chunks = decode(file)
@@ -27,6 +36,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
         )
     }
 
+    @Test
     fun testOpus48000StereoPreservesOffsetWhenDecoderAvailable() = runBlocking {
         val file = copyFixture("audio_timeline/opus_48000_stereo_offset.ogg")
         val chunks = try {
@@ -39,6 +49,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
     }
 
 
+    @Test
     fun testGeneratedWav44100MonoDecodesTo16kTimeline() = runBlocking {
         val file = createPcmWav("wav_44100_mono.wav", 44_100, 1, 2_000, silence = false)
         val chunks = decode(file)
@@ -48,6 +59,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
         assertTrue(chunks.last().endMs in 1_900L..2_100L)
     }
 
+    @Test
     fun testGeneratedWav48000StereoDecodesToMono16k() = runBlocking {
         val file = createPcmWav("wav_48000_stereo.wav", 48_000, 2, 2_000, silence = false)
         val chunks = decode(file)
@@ -56,6 +68,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
         assertTrue(chunks.first().samples.any { kotlin.math.abs(it) > 0.01f })
     }
 
+    @Test
     fun testSilenceRemainsSilence() = runBlocking {
         val file = createPcmWav("wav_silence.wav", 48_000, 1, 1_500, silence = true)
         val chunks = decode(file)
@@ -63,6 +76,7 @@ class AudioDecoderTimelineInstrumentationTest : InstrumentationTestCase() {
         assertTrue(chunks.flatMap { it.samples.asIterable() }.all { kotlin.math.abs(it) < 0.0001f })
     }
 
+    @Test
     fun testLongAudioIsChunkedWithoutTimelineCollapse() = runBlocking {
         val file = createPcmWav("wav_long.wav", 16_000, 1, 25_000, silence = false)
         val chunks = decode(file)
