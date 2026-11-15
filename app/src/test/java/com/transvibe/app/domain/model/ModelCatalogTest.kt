@@ -7,12 +7,12 @@ import org.junit.Test
 
 class OfficialWhisperModelsTest {
     @Test
-    fun standardWhisperCatalogContainsAllPrimaryFamilies() {
+    fun curatedOfficialCatalogMatchesSupportedModels() {
         val ids = OfficialWhisperModels.whisperModels.map { it.id }.toSet()
         assertEquals(
             setOf(
-                "tiny", "tiny-en", "base", "base-en", "small", "small-en",
-                "medium", "medium-en", "large-v1", "large-v2", "large-v3", "large-v3-turbo"
+                "tiny", "base", "small", "medium",
+                "large-v1", "large-v2", "large-v3", "large-v3-turbo"
             ),
             ids
         )
