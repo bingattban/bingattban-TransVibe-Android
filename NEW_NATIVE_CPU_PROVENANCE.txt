@@ -1,0 +1,15 @@
+build=CPU_ARM64_reference
+android_abi=arm64-v8a
+android_api=26
+ggml_vulkan=OFF
+ggml_openmp=OFF
+armv82_dotprod_fp16=OFF
+whisper_upstream_version=v1.9.4
+whisper_upstream_commit_declared=927cfce34f31707e17f2bff35c349632fb9e2c3a
+ndk_path=/usr/local/lib/android/sdk/ndk/28.2.13676358
+ndk_version=Pkg.Revision = 28.2.13676358
+cmake=cmake version 3.31.6
+native_sha256=c090407ec4950a1b4502c973bac36ab05dc20518e3be8759122c5458d52f7a5a
+source_sha256=9560131932ed6c44316a5f7b3a3c4b1041f5b975d3ed2d98a04022bace0f1bb4
+vendor_whisper_sha256=a4c64aae2adfd2bf25f1b669106781d8cb8f7506110913ae8f1c17364813a0fe
+cpu_reference_binary=/home/runner/work/TransVibe-Native-Builder/TransVibe-Native-Builder/build/native-arm64-cpu-reference/libtransvibe_native.so

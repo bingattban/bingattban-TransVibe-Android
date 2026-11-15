@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <!-- Debug only: do not start LogSender from its early ContentProvider.
+             The service stays declared by the Code On the Go injected AAR,
+             and MainActivity starts it after onPostResume instead. -->
+        <provider
+            android:name="com.itsaky.androidide.logsender.utils.LogSenderInstaller"
+            tools:node="remove" />
+    </application>
+</manifest>

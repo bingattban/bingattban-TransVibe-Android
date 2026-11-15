@@ -1,0 +1,107 @@
+name: Android Tests First and ARM64 APK
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-checks:
+    name: Source and JNI contract tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python + C++ preflight
+        run: |
+          set -euo pipefail
+          bash tools/audit_project.sh
+          python3 tools/audit_imports.py
+          python3 tools/verify_regression_guards.py
+          python3 tools/test_native_jni_contract.py
+          test -s ci/vendor-whisper-source-1.9.4.zip
+          unzip -tq ci/vendor-whisper-source-1.9.4.zip
+          g++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only app/src/main/cpp/native-lib.cpp -I app/src/main/cpp 2>/dev/null || echo 'INFO: Android JNI bridge requires NDK headers; native job compiles it.'
+
+  native-arm64:
+    name: Build and verify JNI ARM64
+    needs: source-checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install Android NDK and target SDK
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Restore vendored Whisper and build CPU reference
+        run: |
+          unzip -q ci/vendor-whisper-source-1.9.4.zip
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.2.13676358"
+          bash tools/build_native_arm64_cpu_reference.sh
+          mkdir -p native-output
+          cp build/native-arm64-cpu-reference/libtransvibe_native.so native-output/
+          cp build/native-arm64-cpu-reference/transvibe_native_provenance.txt native-output/
+          sha256sum native-output/libtransvibe_native.so | tee native-output/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-native-arm64-cpu
+          path: native-output/
+          if-no-files-found: error
+          retention-days: 14
+
+  android-tests-then-apk:
+    name: Unit tests, lint, then APK
+    needs: native-arm64
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: transvibe-native-arm64-cpu
+          path: native-output/
+      - name: Install tested JNI binary
+        run: |
+          sha256sum -c native-output/SHA256SUMS
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp native-output/libtransvibe_native.so app/src/main/jniLibs/arm64-v8a/
+      - name: Fetch VERIFIED original AARs (cannot be substituted)
+        env:
+          SHERPA_AAR_URL: ${{ vars.SHERPA_AAR_URL }}
+          SHERPA_AAR_SHA256: ${{ vars.SHERPA_AAR_SHA256 }}
+          FFMPEG_AAR_URL: ${{ vars.FFMPEG_AAR_URL }}
+          FFMPEG_AAR_SHA256: ${{ vars.FFMPEG_AAR_SHA256 }}
+        run: bash ci/download_verified_aars.sh
+      - name: Gradle unit tests and lint (must pass before packaging)
+        run: |
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
+      - name: Build debug app and instrumentation APKs only after tests
+        run: |
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: transvibe-debug-apks
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/androidTest/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
