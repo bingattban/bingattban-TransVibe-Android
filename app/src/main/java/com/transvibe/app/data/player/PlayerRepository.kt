@@ -77,7 +77,8 @@ class PlayerRepository(
                 )
                 DocumentsContract.createDocument(context.contentResolver, parent, mime, safeName)
                     ?: error("Could not create subtitle file in the selected folder")
-            } else {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // MediaStore.Downloads is available only from Android 10 (API 29).
                 val values = ContentValues().apply {
                     put(MediaStore.Downloads.DISPLAY_NAME, safeName)
                     put(MediaStore.Downloads.MIME_TYPE, mime)
@@ -85,6 +86,8 @@ class PlayerRepository(
                 }
                 context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                     ?: error("Could not create subtitle file in Downloads/TransVibe")
+            } else {
+                error("MediaStore Downloads is unavailable before Android 10")
             }
             if (webVtt) SubtitleExporter.writeVttBatches(context.contentResolver, outputUri, batches)
             else SubtitleExporter.writeSrtBatches(context.contentResolver, outputUri, batches)
