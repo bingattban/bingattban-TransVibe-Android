@@ -1,10 +1,10 @@
 package com.transvibe.app.presentation.navigation
 
-import android.app.Activity
 import android.content.res.Configuration
 import android.os.LocaleList
 import android.view.View
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -127,7 +127,7 @@ fun TransVibeApp() {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var showExitConfirmation by remember { mutableStateOf(false) }
     var restoreProcessingOnResume by rememberSaveable { mutableStateOf(true) }
