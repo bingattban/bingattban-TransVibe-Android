@@ -2,12 +2,20 @@ package com.transvibe.app.presentation
 
 import android.content.res.Configuration
 import android.os.LocaleList
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import com.transvibe.app.R
 import java.util.Locale
 
-@Suppress("DEPRECATION")
-class UiConfigurationInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class UiConfigurationInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
+    @Test
     fun testArabicRtlResourcesResolveAtLargeFontScale() {
         val base = instrumentation.targetContext
         val config = Configuration(base.resources.configuration).apply {
@@ -21,6 +29,7 @@ class UiConfigurationInstrumentationTest : InstrumentationTestCase() {
         assertEquals(2.0f, context.resources.configuration.fontScale)
     }
 
+    @Test
     fun testEnglishLtrResourcesResolveAtLargeFontScale() {
         val base = instrumentation.targetContext
         val config = Configuration(base.resources.configuration).apply {
