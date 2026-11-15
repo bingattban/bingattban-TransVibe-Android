@@ -312,11 +312,19 @@ class SubtitleProcessingService : Service() {
     }
 
     private fun updateNotification(text: String, progress: Int) {
-        runCatching {
+        // Android 13+: optional notification updates require runtime permission.
+        // Foreground service creation remains handled by ServiceCompat.startForeground.
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return
+        try {
             NotificationManagerCompat.from(this).notify(
                 NOTIFICATION_ID,
                 processingNotification(text, progress)
             )
+        } catch (_: SecurityException) {
+            // Permission may be revoked between the check and notification delivery.
         }
     }
 
@@ -341,8 +349,10 @@ class SubtitleProcessingService : Service() {
             .setAutoCancel(true)
             .setOngoing(false)
             .build()
-        runCatching {
+        try {
             NotificationManagerCompat.from(this).notify(COMPLETION_NOTIFICATION_ID, notification)
+        } catch (_: SecurityException) {
+            // Completion notifications are optional when permission is revoked.
         }
     }
 
