@@ -1,6 +1,12 @@
 package com.transvibe.app.nativebridge.whisper
 
-import android.test.AndroidTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import androidx.test.platform.app.InstrumentationRegistry
@@ -10,15 +16,19 @@ import androidx.test.platform.app.InstrumentationRegistry
  * Deliberately detects the legacy missing nativeBackendForContext entry point.
  * Does not require, create, overwrite, or delete any downloaded model weights.
  */
-@Suppress("DEPRECATION")
-class WhisperNativeContractInstrumentationTest : AndroidTestCase() {
+@RunWith(AndroidJUnit4::class)
+class WhisperNativeContractInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
+    private val context get() = instrumentation.targetContext
     private val invalidHandle = -1L
 
+    @Test
     fun testNativeLibraryLoadsAndBridgeSelfTestWorks() {
         assertTrue("ARM64 Whisper JNI library must load", WhisperNative.isLibraryAvailable())
         assertEquals("مرحبا 🎬", WhisperNative.bridgeSelfTestForTests("مرحبا 🎬").text)
     }
 
+    @Test
     fun testCreateContextBindingReturnsStructuredErrorWithoutModelWeights() {
         // The file is not created. App's models directory is never modified.
         val missingPath = File(context.cacheDir, "transvibe-jni-contract-no-such-model-${System.nanoTime()}.bin")
@@ -28,23 +38,27 @@ class WhisperNativeContractInstrumentationTest : AndroidTestCase() {
         }
     }
 
+    @Test
     fun testBackendInspectionBindingExistsAndRejectsInvalidHandle() {
         // runtimeBackend currently hides an UnsatisfiedLinkError as UNVERIFIED.
         // Inspect the native method directly so the test catches the missing binding.
         assertRawNativeError("nativeBackendForContext", NativeErrorCode.INVALID_HANDLE)
     }
 
+    @Test
     fun testModelMetadataBindingsRejectInvalidHandle() {
         assertRawNativeError("nativeIsMultilingual", NativeErrorCode.INVALID_HANDLE)
         assertRawNativeError("nativeModelTypeReadable", NativeErrorCode.INVALID_HANDLE)
     }
 
+    @Test
     fun testLanguageDetectionBindingRejectsInvalidHandle() {
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) {
             WhisperNative.detectLanguageDetailed(invalidHandle, FloatArray(1_600), threads = 1)
         }
     }
 
+    @Test
     fun testTranscriptionBindingRejectsInvalidHandle() {
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) {
             WhisperNative.transcribeDetailed(
@@ -57,6 +71,7 @@ class WhisperNativeContractInstrumentationTest : AndroidTestCase() {
         }
     }
 
+    @Test
     fun testCancelAndReleaseBindingsRejectInvalidHandle() {
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) { WhisperNative.cancel(invalidHandle) }
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) { WhisperNative.releaseContext(invalidHandle) }
@@ -67,6 +82,7 @@ class WhisperNativeContractInstrumentationTest : AndroidTestCase() {
      * transvibeTestWhisperModelPath pointing at an ALREADY INSTALLED compatible Tiny model.
      * Do not create or delete that file; a missing argument skips this additional test only.
      */
+    @Test
     fun testInstalledModelBackendIfConfigured() {
         val path = InstrumentationRegistry.getArguments()
             .getString("transvibeTestWhisperModelPath")
