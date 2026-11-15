@@ -1,28 +1,36 @@
 package com.transvibe.app.data.persistence
 
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import com.transvibe.app.domain.model.ProcessingJobState
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
-@Suppress("DEPRECATION")
-class PersistenceInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class PersistenceInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
     private lateinit var db: TransVibeDatabase
     private lateinit var dao: ProcessingDao
 
-    override fun setUp() {
-        super.setUp()
+    @Before
+    fun setUp() {
         db = TransVibeDatabase.createInMemoryForTests(instrumentation.context)
         dao = db.processingDao()
         File(instrumentation.context.filesDir, "sessions").deleteRecursively()
     }
 
-    override fun tearDown() {
+    @After
+    fun tearDown() {
         db.close()
         File(instrumentation.context.filesDir, "sessions").deleteRecursively()
-        super.tearDown()
     }
 
+    @Test
     fun testDeletingHistoryCleansOnlyPrivateSessionOutputs() {
         val testContext = instrumentation.context
         val root = File(testContext.filesDir, "sessions").apply { mkdirs() }
@@ -49,6 +57,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         }
     }
 
+    @Test
     fun testRoomInsertionAndJobUpdate() {
         val job = job("job-1")
         dao.insertCurrentJob(job)
@@ -60,6 +69,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals(42f, updated.progress)
     }
 
+    @Test
     fun testDirtyTailReplacementRemovesStaleRows() {
         dao.insertJob(job("job-tail").copy(state = ProcessingJobState.RUNNING.name))
         dao.insertSegments(
@@ -86,6 +96,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals("merged", rows.last().originalText)
     }
 
+    @Test
     fun testSegmentOrderingAndPagination() {
         dao.insertJob(job("job-pages"))
         dao.insertSegments(
@@ -103,6 +114,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals(listOf(2, 3), second.map { it.segmentIndex })
     }
 
+    @Test
     fun testCorruptedLegacyDataIsRecordedWithoutCrashingMigration() {
         val dir = File(instrumentation.context.filesDir, "sessions").apply { mkdirs() }
         File(dir, "broken.json").writeText("{ definitely-not-json")
@@ -113,6 +125,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertNotNull(dao.getMigrationMarker(LegacySessionMigrator.MIGRATION_NAME))
     }
 
+    @Test
     fun testLegacyMigrationIsIdempotentAcrossProcessStyleRestart() {
         val dir = File(instrumentation.context.filesDir, "sessions").apply { mkdirs() }
         File(dir, "legacy.json").writeText(validLegacyJson("legacy-job"))
@@ -126,6 +139,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
     }
 
 
+    @Test
     fun testResumeTrimsOnlySegmentsAfterOverlapPoint() {
         dao.insertJob(job("job-resume").copy(state = ProcessingJobState.RUNNING.name))
         dao.insertSegments(
@@ -142,6 +156,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals(1L, tail.second)
     }
 
+    @Test
     fun testCancelAndFailureAreTerminalAndIdempotent() {
         dao.insertJob(job("job-cancel").copy(state = ProcessingJobState.RUNNING.name))
         assertEquals(1, dao.finishJob("job-cancel", ProcessingJobState.CANCELLED.name, "cancelled", 20L))
@@ -154,6 +169,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
     }
 
     /** Cancellation is terminal even if the running worker posts a delayed checkpoint. */
+    @Test
     fun testLateWorkerCheckpointCannotResurrectCancelledJob() {
         dao.insertJob(job("cancel-race").copy(state = ProcessingJobState.RUNNING.name))
         assertEquals(1, dao.finishJob("cancel-race", ProcessingJobState.CANCELLED.name, "cancelled", 40L))
@@ -166,6 +182,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals(0, dao.finishJob("cancel-race", ProcessingJobState.FAILED.name, "other", 42L))
     }
 
+    @Test
     fun testEarlyQueuedCancellationCannotBeRevertedByWorkerStartup() {
         dao.insertJob(job("early-cancel"))
         assertEquals(1, dao.finishJob("early-cancel", ProcessingJobState.CANCELLED.name, "cancelled", 30L))
@@ -175,6 +192,7 @@ class PersistenceInstrumentationTest : InstrumentationTestCase() {
         assertEquals(ProcessingJobState.CANCELLED.name, dao.getJob("early-cancel")?.state)
     }
 
+    @Test
     fun testInterruptedJobCanBeRequeuedForResume() {
         dao.insertJob(job("job-interrupted").copy(state = ProcessingJobState.INTERRUPTED.name, lastCompletedMediaTimestampMs = 5_000L))
         assertEquals(1, dao.requeueInterrupted("job-interrupted", 30L))
