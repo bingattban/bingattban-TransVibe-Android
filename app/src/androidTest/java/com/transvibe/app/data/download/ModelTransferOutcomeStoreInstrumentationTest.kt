@@ -1,16 +1,23 @@
 package com.transvibe.app.data.download
 
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import com.transvibe.app.domain.model.DownloadProgress
 import com.transvibe.app.domain.model.WhisperModel
 import com.transvibe.app.domain.model.WhisperModelType
 
-@Suppress("DEPRECATION")
-class ModelTransferOutcomeStoreInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class ModelTransferOutcomeStoreInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
     private lateinit var model: WhisperModel
 
-    override fun setUp() {
-        super.setUp()
+    @Before
+    fun setUp() {
         instrumentation.targetContext.getSharedPreferences("model_transfer_records_v2", 0).edit().clear().commit()
         model = WhisperModel(
             id = "restart-model",
@@ -25,6 +32,7 @@ class ModelTransferOutcomeStoreInstrumentationTest : InstrumentationTestCase() {
         )
     }
 
+    @Test
     fun testUnfinishedTransferSurvivesProcessStyleRecreation() {
         val first = ModelTransferOutcomeStore(instrumentation.targetContext)
         first.persist(
@@ -54,6 +62,7 @@ class ModelTransferOutcomeStoreInstrumentationTest : InstrumentationTestCase() {
         assertEquals(40, restored.percent)
     }
 
+    @Test
     fun testPartialAndRetryingStatesRestoreAsPaused() {
         val store = ModelTransferOutcomeStore(instrumentation.targetContext)
         store.persist(
