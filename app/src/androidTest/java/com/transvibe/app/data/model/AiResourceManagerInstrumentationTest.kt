@@ -1,6 +1,12 @@
 package com.transvibe.app.data.model
 
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import com.transvibe.app.domain.model.AiResourceState
 import com.transvibe.app.domain.model.DownloadPolicy
 import com.transvibe.app.domain.model.LanguageCode
@@ -24,24 +30,26 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.security.MessageDigest
 import kotlin.coroutines.resume
 
-@Suppress("DEPRECATION")
-class AiResourceManagerInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class AiResourceManagerInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
     private val bytes = ByteArray(4096) { (it % 251).toByte() }
     private lateinit var scope: CoroutineScope
 
-    override fun setUp() {
-        super.setUp()
+    @Before
+    fun setUp() {
         instrumentation.context.getSharedPreferences("ai_resources", 0).edit().clear().commit()
         instrumentation.context.filesDir.resolve("models").deleteRecursively()
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     }
 
-    override fun tearDown() {
+    @After
+    fun tearDown() {
         scope.cancel()
         instrumentation.context.filesDir.resolve("models").deleteRecursively()
-        super.tearDown()
     }
 
+    @Test
     fun testSelectedModelReadiness() = runBlocking {
         val model = model("ready")
         val store = store(true)
@@ -51,6 +59,7 @@ class AiResourceManagerInstrumentationTest : InstrumentationTestCase() {
         assertEquals(AiResourceState.Ready, state)
     }
 
+    @Test
     fun testMissingModel() = runBlocking {
         val model = model("missing")
         val manager = manager(store(true), model, translationReady = true)
@@ -58,6 +67,7 @@ class AiResourceManagerInstrumentationTest : InstrumentationTestCase() {
         assertTrue(state is AiResourceState.MissingWhisperModel || state is AiResourceState.InsufficientStorage)
     }
 
+    @Test
     fun testMissingTranslationPack() = runBlocking {
         val model = model("missing-translation")
         val store = store(true)
@@ -67,6 +77,7 @@ class AiResourceManagerInstrumentationTest : InstrumentationTestCase() {
         assertEquals(AiResourceState.MissingTranslationModel, state)
     }
 
+    @Test
     fun testCancellationPropagatesFromModelValidation() = runBlocking {
         val model = model("cancel")
         val validator = object : WhisperModelBinaryValidator {
@@ -84,6 +95,7 @@ class AiResourceManagerInstrumentationTest : InstrumentationTestCase() {
         } catch (_: CancellationException) { Unit }
     }
 
+    @Test
     fun testStateRefreshDetectsCorruptedModel() = runBlocking {
         val model = model("corrupted")
         val store = store(true)
