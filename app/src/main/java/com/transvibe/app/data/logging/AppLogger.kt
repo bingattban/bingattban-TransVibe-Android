@@ -47,7 +47,12 @@ object AppLogger {
     fun error(tag: String, error: ProcessingError, event: String, fields: Fields = Fields()) {
         if (!BuildConfig.DEBUG) return
         val merged = fields.copy(errorCode = error.code.stableCode)
-        Log.e(tag, structured(event, merged), error.technicalCause)
+        // Diagnostics must never alter error mapping, including plain JVM tests.
+        try {
+            Log.e(tag, structured(event, merged), error.technicalCause)
+        } catch (_: RuntimeException) {
+            // Best-effort logging: preserve the original domain error.
+        }
     }
 
     private fun structured(name: String, fields: Fields): String {
