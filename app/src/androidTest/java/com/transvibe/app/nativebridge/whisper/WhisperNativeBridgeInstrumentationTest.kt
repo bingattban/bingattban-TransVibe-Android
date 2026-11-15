@@ -1,9 +1,18 @@
 package com.transvibe.app.nativebridge.whisper
 
-import android.test.AndroidTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 
-@Suppress("DEPRECATION")
-class WhisperNativeBridgeInstrumentationTest : AndroidTestCase() {
+@RunWith(AndroidJUnit4::class)
+class WhisperNativeBridgeInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
+    private val context get() = instrumentation.targetContext
+    @Test
     fun testUnicodeAndMetricTransferAcrossJni() {
         val cases = listOf(
             "مرحبا بالعالم",
@@ -25,18 +34,21 @@ class WhisperNativeBridgeInstrumentationTest : AndroidTestCase() {
         }
     }
 
+    @Test
     fun testEmptyInputRejectedBeforeNativeInference() {
         assertNativeCode(NativeErrorCode.INVALID_AUDIO) {
             WhisperNative.transcribeDetailed(1234L, FloatArray(0), "en", false, 1)
         }
     }
 
+    @Test
     fun testOversizedInputRejectedBeforeNativeInference() {
         assertNativeCode(NativeErrorCode.INVALID_AUDIO) {
             WhisperNative.transcribeDetailed(1234L, FloatArray(WhisperNative.MAX_AUDIO_SAMPLES + 1), "en", false, 1)
         }
     }
 
+    @Test
     fun testInvalidAudioRangeRejectedBeforeNativeInference() {
         assertNativeCode(NativeErrorCode.INVALID_ARGUMENT) {
             WhisperNative.transcribeDetailed(
@@ -45,12 +57,14 @@ class WhisperNativeBridgeInstrumentationTest : AndroidTestCase() {
         }
     }
 
+    @Test
     fun testInvalidHandleIsStructured() {
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) {
             WhisperNative.releaseContext(Long.MAX_VALUE)
         }
     }
 
+    @Test
     fun testDoubleReleaseStyleInvalidationRemainsDeterministic() {
         repeat(2) {
             assertNativeCode(NativeErrorCode.INVALID_HANDLE) {
@@ -59,6 +73,7 @@ class WhisperNativeBridgeInstrumentationTest : AndroidTestCase() {
         }
     }
 
+    @Test
     fun testCancelWithInvalidHandleIsStructured() {
         assertNativeCode(NativeErrorCode.INVALID_HANDLE) {
             WhisperNative.cancel(42424242L)
