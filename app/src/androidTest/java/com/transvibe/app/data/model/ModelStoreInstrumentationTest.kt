@@ -1,6 +1,12 @@
 package com.transvibe.app.data.model
 
-import android.test.InstrumentationTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import com.transvibe.app.domain.model.ModelIntegrityState
 import com.transvibe.app.domain.model.WhisperModel
 import com.transvibe.app.domain.model.WhisperModelType
@@ -8,15 +14,17 @@ import com.transvibe.app.domain.repository.WhisperModelBinaryValidator
 import kotlinx.coroutines.runBlocking
 import java.security.MessageDigest
 
-@Suppress("DEPRECATION")
-class ModelStoreInstrumentationTest : InstrumentationTestCase() {
+@RunWith(AndroidJUnit4::class)
+class ModelStoreInstrumentationTest {
+    private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
     private val validBytes = ByteArray(4096) { ((it * 31) and 0xff).toByte() }
 
-    override fun tearDown() {
+    @After
+    fun tearDown() {
         instrumentation.context.filesDir.resolve("models").deleteRecursively()
-        super.tearDown()
     }
 
+    @Test
     fun testValidOfficialModelIsReadyAndMissingMetadataIsRecovered() = runBlocking {
         val model = model("valid", validBytes)
         val store = store(nativeValid = true)
@@ -31,6 +39,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         assertTrue(store.validate(model, requireMetadata = true))
     }
 
+    @Test
     fun testWrongSizeIsCorrupted() = runBlocking {
         val model = model("wrong-size", validBytes)
         val store = store(nativeValid = true)
@@ -38,6 +47,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         assertEquals(ModelIntegrityState.BINARY_CORRUPTED, store.inspectAndRecover(model))
     }
 
+    @Test
     fun testWrongShaIsCorrupted() = runBlocking {
         val model = model("wrong-sha", validBytes, shaOverride = "0".repeat(64))
         val store = store(nativeValid = true)
@@ -45,6 +55,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         assertEquals(ModelIntegrityState.BINARY_CORRUPTED, store.inspectAndRecover(model))
     }
 
+    @Test
     fun testNativeInvalidModelIsCorrupted() = runBlocking {
         val model = model("native-invalid", validBytes)
         val store = store(nativeValid = false)
@@ -52,6 +63,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         assertEquals(ModelIntegrityState.BINARY_CORRUPTED, store.inspectAndRecover(model))
     }
 
+    @Test
     fun testStaleMetadataIsRepaired() = runBlocking {
         val model = model("stale-meta", validBytes)
         val store = store(nativeValid = true)
@@ -63,6 +75,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         assertTrue(store.validate(model, requireMetadata = true))
     }
 
+    @Test
     fun testInterruptedReplacementRecoversKnownGoodBackup() = runBlocking {
         val model = model("recovery", validBytes)
         val store = store(nativeValid = true)
@@ -70,7 +83,7 @@ class ModelStoreInstrumentationTest : InstrumentationTestCase() {
         val backup = final.resolveSibling(final.name + ".bak").apply { writeBytes(validBytes) }
 
         assertEquals(ModelIntegrityState.READY, store.inspectAndRecover(model))
-        assertContentEquals(validBytes, final.readBytes())
+        assertArrayEquals(validBytes, final.readBytes())
         assertFalse(backup.exists())
     }
 
