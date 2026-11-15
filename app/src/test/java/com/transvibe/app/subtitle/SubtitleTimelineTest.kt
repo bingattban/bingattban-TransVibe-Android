@@ -8,9 +8,9 @@ import org.junit.Test
 class SubtitleTimelineTest {
     private val timeline = SubtitleTimeline(
         listOf(
-            SubtitleSegment(0, 1_000, 2_000, "a", arabicText = "أ"),
-            SubtitleSegment(1, 3_000, 4_500, "b", arabicText = "ب"),
-            SubtitleSegment(2, 5_000, 6_000, "c", arabicText = "ج")
+            SubtitleSegment(0, 1_000, 2_000, "a", translatedText = "أ"),
+            SubtitleSegment(1, 3_000, 4_500, "b", translatedText = "ب"),
+            SubtitleSegment(2, 5_000, 6_000, "c", translatedText = "ج")
         )
     )
 
