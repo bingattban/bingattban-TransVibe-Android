@@ -27,6 +27,7 @@ jobs:
           python3 tools/audit_imports.py
           python3 tools/verify_regression_guards.py
           python3 tools/test_native_jni_contract.py
+          python3 tools/test_ci_aar_contract.py
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
           g++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only app/src/main/cpp/native-lib.cpp -I app/src/main/cpp 2>/dev/null || echo 'INFO: Android JNI bridge requires NDK headers; native job compiles it.'
