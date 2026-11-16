@@ -33,6 +33,7 @@ jobs:
           python3 tools/verify_native_jni_contract.py --project . --library app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
           python3 tools/test_benchmark_compare.py
           python3 tools/test_repository_layout.py
+          python3 tools/test_release_signing_contract.py
           bash -n tools/build_native_arm64_dotprod_experimental.sh
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
@@ -146,9 +147,12 @@ jobs:
             app/build/intermediates/lint_intermediate_text_report/
           if-no-files-found: warn
           retention-days: 14
-      - name: Build debug app and instrumentation APKs only after tests
+      - name: Build debug and instrumentation APKs, then validate unsigned release after tests
         run: |
-          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+          # R8/minification and Release packaging must work before secrets are used.
+          # This PR validation produces an UNSIGNED Release, which is not uploaded.
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease
+          find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -size +0c | grep -q .
       - uses: actions/upload-artifact@v4
         if: success()
         with:
