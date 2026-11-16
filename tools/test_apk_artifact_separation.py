@@ -19,7 +19,7 @@ class IndependentApkArtifactsTest(unittest.TestCase):
         self.assertIn('applicationId = "com.transvibe.app"', gradle)
         self.assertIn('signingConfigs.getByName("transvibeRelease")', gradle)
         self.assertTrue((ROOT / "app/src/preview/res/values/strings.xml").is_file())
-        self.assertIn("TransVibe Test", (ROOT / "app/src/testing/res/values/strings.xml").read_text())
+        self.assertIn("TransVibe Test", (ROOT / "app/src/preview/res/values/strings.xml").read_text())
 
     def test_tests_first_then_test_and_unsigned_release_are_checked(self):
         ci = (ROOT / ".github/workflows/android-ci.yml").read_text()
