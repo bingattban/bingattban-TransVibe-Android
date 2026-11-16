@@ -106,6 +106,8 @@ jobs:
         run: |
           set -euo pipefail
           ./gradlew --no-daemon :app:assembleRelease
+      - name: Verify ML Kit reflective components survive R8 in actual Release
+        run: python3 ci/verify_mlkit_registrars.py
       - name: Verify signature, identity, version, and signer certificate
         shell: bash
         env:
