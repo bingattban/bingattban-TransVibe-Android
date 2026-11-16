@@ -129,6 +129,15 @@ dependencies {
         implementation("com.arthenica:smart-exception-java:0.2.1")
     }
 
+    // FFmpegKit's local AAR does not expose its Maven transitive dependencies.
+    // Java and common are separate authentic JARs. PackageLoader is in common.
+    val localSmartExceptionCommon = file("libs/smart-exception-common-0.2.1.jar")
+    if (localSmartExceptionCommon.isFile) {
+        implementation(files(localSmartExceptionCommon))
+    } else {
+        implementation("com.arthenica:smart-exception-common:0.2.1")
+    }
+
     implementation(libs.navigation.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.androidx.room.runtime)
@@ -199,6 +208,13 @@ val verifyLocalAsrLibraries = tasks.register("verifyLocalAsrLibraries") {
     description = "Checks local FFmpegKit, Sherpa and ONNX Runtime AARs."
 
     doLast {
+        val commonJar = file("libs/smart-exception-common-0.2.1.jar")
+        check(commonJar.isFile) {
+            "FFmpegKit needs app/libs/smart-exception-common-0.2.1.jar (contains PackageLoader)."
+        }
+        check(ZipFile(commonJar).use { it.getEntry("com/arthenica/smartexception/PackageLoader.class") != null }) {
+            "Wrong Smart Exception common JAR: PackageLoader.class is missing."
+        }
         check(ffmpegAar.isFile) {
             "Missing FFmpegKit AAR. Place one of ${ffmpegAarNames.joinToString()} in app/libs/"
         }
