@@ -62,14 +62,14 @@ jobs:
       - name: Build separate testing APK with no release secrets
         run: |
           set -euo pipefail
-          # Uses disposable Debug signing; package com.transvibe.app.test.
+          # Uses disposable Debug signing; package com.transvibe.app.preview.
           # A TEST APK cannot overwrite or conflict with the official Release.
           ./gradlew --no-daemon :app:assembleTesting
           apk="app/build/outputs/apk/testing/app-testing.apk"
           test -s "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
-            grep -F "package: name='com.transvibe.app.test' versionCode='2' versionName='1.0.1'"
+            grep -F "package: name='com.transvibe.app.preview' versionCode='2' versionName='1.0.1'"
           mkdir -p dist/test
           cp "$apk" dist/test/TransVibe-v1.0.1-TEST.apk
           sha256sum dist/test/TransVibe-v1.0.1-TEST.apk
