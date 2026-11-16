@@ -45,3 +45,23 @@ Exit `0`: no measured regression / sufficient quality evidence; `2`: inconclusiv
 * Vulkan: **not enabled or validated** by this change. Upstream ggml Vulkan on Android additionally needs a host `glslc`, `vulkan.hpp`, Vulkan headers and SPIR-V dependencies. Do not label experimental CPU builds as GPU-enabled or claim accelerated speed until a real Vulkan binary passes device tests.
 
 Use no fake libraries, tests before APK, and never merge a failing workflow. No automatic Firebase billable tests.
+
+## FFmpeg fallback: SAF vs streamed file-copy input
+
+This is **not a Whisper inference acceleration**. Android's MediaCodec pipeline is still the
+first choice; only videos unsupported by it enter FFmpegKit. Previously the FFmpeg
+fallback copied a whole `content://` video into the cache. FFmpegKit 6.0-2 provides
+`FFmpegKitConfig.getSafParameterForRead(Context, Uri)`, allowing a suitable Android
+document provider to be decoded without that initial copy.
+
+For a supported `content://` video, the log `AudioDecodeTiming` now includes
+`input_mode=saf` and `input_copy_ms=0`. When SAF cannot be created, it uses
+`input_mode=content_copy`; if FFmpeg rejects a prepared SAF path, a single
+copy retry reports `input_mode=saf_copy_fallback`. Local files remain
+`input_mode=local_file`. No actual URI or transcript should be logged.
+
+Compare **the same video/provider/device** using the previous CPU APK and the
+experimental PR APK. Record time-to-first-audio-chunk and total job time, then
+verify output WAV decoding, subtitle timing and cancellation. Test both a
+provider that accepts SAF and a provider that denies it. Long videos are the
+most useful examples; no speed claim is valid without on-device results.
