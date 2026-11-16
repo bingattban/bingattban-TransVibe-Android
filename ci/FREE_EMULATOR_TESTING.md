@@ -4,6 +4,8 @@ This lane uses **only standard GitHub-hosted Ubuntu runners** and the open-sourc
 `reactivecircus/android-emulator-runner@v2` action. For the **public** TransVibe
 repository, standard GitHub-hosted runner use is free. No paid device farm,
 billing-enabled Google Cloud project, service-account key or private media is needed.
+No user model, real microphone recording, uploaded video or personally identified
+reference transcript is needed to run these smoke tests.
 
 ## How to run
 
