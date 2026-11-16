@@ -154,14 +154,14 @@ jobs:
           # All APKs must build AFTER unit tests and Android Lint.
           # The user-downloadable TEST has a separate package identity.
           # RELEASE in pull requests is UNSIGNED and never published.
-          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleTesting :app:assembleRelease
-          test -s app/build/outputs/apk/testing/app-testing.apk
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assemblePreview :app:assembleRelease
+          test -s app/build/outputs/apk/preview/app-preview.apk
           find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -size +0c | grep -q .
       - name: Upload only the separate installable TEST APK from pull-request checks
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: transvibe-pr-TEST
-          path: app/build/outputs/apk/testing/app-testing.apk
+          path: app/build/outputs/apk/preview/app-preview.apk
           if-no-files-found: error
           retention-days: 14
