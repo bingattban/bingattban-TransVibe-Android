@@ -31,11 +31,32 @@ and passwords; a public certificate hash alone cannot restore the private key.
    owner's JKS to temporary private storage, signs the ARM64 Release APK,
    validates its signing certificate with `apksigner` and `keytool`, and
    checks application ID and version.
-4. GitHub Actions **Artifacts** from the signing workflow contain:
-   `TransVibe-v1.0.1-arm64-signed.apk`, `SHA256SUMS`, and `BUILD_INFO.txt`.
-   No keystore or password is included. The artifact expires after 30 days.
-   This workflow does **not** automatically publish a GitHub Release or Play
-   Store listing.
+4. After successful trusted-main signing, open GitHub > Actions >
+   **Signed TransVibe Release (trusted main)** > the latest successful run.
+   Under **Artifacts**, there are **two separate downloads**, each containing
+   exactly one installable APK:
+
+   | GitHub artifact | File inside | Android package |
+   | --- | --- | --- |
+   | `transvibe-v1.0.1-TEST` | `TransVibe-v1.0.1-TEST.apk` | `com.transvibe.app.test` |
+   | `transvibe-v1.0.1-RELEASE` | `TransVibe-v1.0.1-RELEASE.apk` | `com.transvibe.app` |
+
+   TEST is visibly labelled **TransVibe Test**, is debuggable, and is signed
+   with a disposable GitHub Debug key. You can install it alongside Release
+   without overwriting your official app data. Because its test signing key
+   is not stable between hosted builds, a later TEST APK may require uninstalling
+   the previous TEST version. **Never** use TEST for permanent user data.
+   RELEASE is non-debuggable, R8-minified, signed using the **owner's permanent
+   private JKS** and verified with `apksigner`. Keep its signing key and package
+   identity unchanged in future versions to allow in-place updates.
+
+   The artifact downloads arrive as ZIP files; open the ZIP and extract
+   the single APK inside. Artifacts expire after 30 days. There are no
+   keystore, password, or certificate-private-key files in either ZIP.
+   The normal PR CI may also provide `transvibe-pr-TEST` for early testing,
+   but the official signed Release exists **only** after green main CI.
+   This workflow does **not** automatically publish a GitHub Release.
+
 5. Failed tests, an absent/wrong password/alias/JKS, a changed main SHA, a
    certificate mismatch, or APK verification failure must **block publication**.
 
