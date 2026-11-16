@@ -36,6 +36,7 @@ jobs:
           python3 tools/test_release_signing_contract.py
           python3 tools/test_apk_artifact_separation.py
           python3 tools/test_release_launch_smoke_contract.py
+          python3 tools/test_mlkit_release_registrars.py
           bash -n tools/build_native_arm64_dotprod_experimental.sh
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
