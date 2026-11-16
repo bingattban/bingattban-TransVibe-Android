@@ -1,0 +1,25 @@
+# Gradle / Android generated files
+.gradle/
+**/build/
+local.properties
+
+# CMake / NDK generated cache
+**/.cxx/
+.externalNativeBuild/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Device-only archives, AI models and private data
+app/libs/*.aar
+app/libs/*.jar
+app/src/main/jniLibs/**/*.so
+*.keystore
+*.jks
+*.log
+app/src/main/assets/models/
