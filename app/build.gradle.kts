@@ -32,6 +32,11 @@ fun aarContainsArm64Library(aar: File, library: String): Boolean =
 val sherpaBundlesOnnxRuntime = aarContainsArm64Library(sherpaAar, "libonnxruntime.so")
 val useStandaloneOnnxRuntime = !sherpaBundlesOnnxRuntime
 
+// The release signing key is injected only into the trusted GitHub Actions
+// release job. Do not commit keystores or passwords to source control.
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+
+
 android {
     namespace = "com.transvibe.app"
     compileSdk = 36
@@ -40,8 +45,8 @@ android {
         applicationId = "com.transvibe.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         buildConfigField("String", "FFMPEG_KIT_VERSION", "\"$ffmpegVersion\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += "arm64-v8a" }
@@ -58,6 +63,20 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseKeystorePath != null) {
+            create("transvibeRelease") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("Missing ANDROID_KEYSTORE_PASSWORD for release signing")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("Missing ANDROID_KEY_ALIAS for release signing")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+                    ?: throw GradleException("Missing ANDROID_KEY_PASSWORD for release signing")
+            }
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             // Enable Code On the Go/AndroidIDE debug LogSender integration.
@@ -67,6 +86,11 @@ android {
         }
 
         release {
+            // On PRs, build an unsigned release for R8 validation without secrets.
+            // Only the trusted post-main-CI workflow receives this signing config.
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("transvibeRelease")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
