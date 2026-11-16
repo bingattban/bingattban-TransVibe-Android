@@ -22,6 +22,8 @@ PINNED = {
         "077dec5e2d821234c7dc0aba584bec8f999854b546c754cab93a90741c56fbeb",
     "app/libs/smart-exception-java-0.2.1.jar":
         "5b96aaa5f191dedbef72fb0c38f1a2b01807920afc0d92a75a2acd6e0cc7703c",
+    "app/libs/smart-exception-common-0.2.1.jar":
+        "1cad0fb4dfa01755a014331b5ed199281d2c3fab5aca5c9d7abd0b41d0ec3f7b",
 }
 NATIVE = "app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so"
 EXPECTED_PATHS = frozenset((*PINNED, NATIVE))
@@ -66,6 +68,11 @@ class VendoredAndroidLibrariesTest(unittest.TestCase):
                 self.assertIsNone(aar.testzip(), path)
                 self.assertIn("AndroidManifest.xml", aar.namelist())
                 self.assertIn("jni/arm64-v8a/" + library, aar.namelist())
+
+    def test_common_jar_contains_ffmpeg_runtime_loader(self):
+        with zipfile.ZipFile(ROOT / "app/libs/smart-exception-common-0.2.1.jar") as jar:
+            self.assertIsNone(jar.testzip())
+            self.assertIn("com/arthenica/smartexception/PackageLoader.class", jar.namelist())
 
     def test_smart_exception_jar_contains_classes(self):
         with zipfile.ZipFile(ROOT / "app/libs/smart-exception-java-0.2.1.jar") as jar:
