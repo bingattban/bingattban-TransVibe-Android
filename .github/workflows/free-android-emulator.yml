@@ -36,6 +36,7 @@ jobs:
           python3 tools/test_vendored_android_libraries.py
           python3 tools/test_ffmpeg_runtime_dependencies.py
           python3 tools/test_free_emulator_ci.py
+          python3 tools/test_release_launch_smoke_contract.py
       - name: Exclude Code On The Go-only debug provider from hosted emulator
         run: |
           test -f app/src/debug/AndroidManifest.xml
@@ -45,6 +46,39 @@ jobs:
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
       - name: Package actual debug and instrumentation APKs after tests
         run: ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assemblePreview
+      - name: Build real R8-minified Release with ephemeral CI debug certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Debug assembly generated this disposable certificate. NEVER use the
+          # owner's production signing secrets on PRs or untrusted code.
+          test -s "$HOME/.android/debug.keystore"
+          ANDROID_KEYSTORE_PATH="$HOME/.android/debug.keystore" \
+          ANDROID_KEYSTORE_PASSWORD=android \
+          ANDROID_KEY_ALIAS=androiddebugkey \
+          ANDROID_KEY_PASSWORD=android \
+            ./gradlew --no-daemon :app:assembleRelease
+          test -s app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+      - name: Verify ML Kit reflective components survive R8 in actual Release
+        run: python3 ci/verify_mlkit_registrars.py
+      - name: Inspect R8 class-name mapping for crash
+        run: bash ci/inspect_release_mapping.sh
+      - name: Preserve Release R8 mapping for stack retrace
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-release-r8-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Keep Release startup logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-release-startup-diagnostics
+          path: build/emulator-diagnostics/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Enable KVM on standard public GitHub runner
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

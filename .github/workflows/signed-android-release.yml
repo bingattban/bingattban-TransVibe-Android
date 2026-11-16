@@ -69,10 +69,10 @@ jobs:
           test -s "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
-            grep -F "package: name='com.transvibe.app.preview' versionCode='2' versionName='1.0.1'"
+            grep -F "package: name='com.transvibe.app.preview' versionCode='3' versionName='1.0.2'"
           mkdir -p dist/test
-          cp "$apk" dist/test/TransVibe-v1.0.1-TEST.apk
-          sha256sum dist/test/TransVibe-v1.0.1-TEST.apk
+          cp "$apk" dist/test/TransVibe-v1.0.2-TEST.apk
+          sha256sum dist/test/TransVibe-v1.0.2-TEST.apk
 
       - name: Restore owner's signing keystore only into temporary private storage
         shell: bash
@@ -106,6 +106,8 @@ jobs:
         run: |
           set -euo pipefail
           ./gradlew --no-daemon :app:assembleRelease
+      - name: Verify ML Kit reflective components survive R8 in actual Release
+        run: python3 ci/verify_mlkit_registrars.py
       - name: Verify signature, identity, version, and signer certificate
         shell: bash
         env:
@@ -127,23 +129,56 @@ jobs:
             exit 1
           }
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
-            grep -F "package: name='com.transvibe.app' versionCode='2' versionName='1.0.1'"
+            grep -F "package: name='com.transvibe.app' versionCode='3' versionName='1.0.2'"
           mkdir -p dist/release
-          cp "$apk" "dist/release/TransVibe-v1.0.1-RELEASE.apk"
-          sha256sum dist/release/TransVibe-v1.0.1-RELEASE.apk
+          cp "$apk" "dist/release/TransVibe-v1.0.2-RELEASE.apk"
+          sha256sum dist/release/TransVibe-v1.0.2-RELEASE.apk
           echo "Release APK signature and version confirmed; only the public certificate fingerprint was recorded."
+      - name: Remove private signing key before invoking third-party emulator action
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f "$RUNNER_TEMP/transvibe-signing/signing.jks"
+          rmdir "$RUNNER_TEMP/transvibe-signing" 2>/dev/null || true
+          test ! -e "$ANDROID_KEYSTORE_PATH"
+      - name: Enable KVM for official Release startup test
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Cold-start exactly the owner's signed APK before publishing
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          cores: 2
+          ram-size: 3072M
+          disable-animations: true
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash ci/release_apk_smoke.sh dist/release/TransVibe-v1.0.2-RELEASE.apk com.transvibe.app
+      - name: Save official Release launch failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-signed-release-startup-diagnostics
+          path: build/emulator-diagnostics/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Publish TEST APK as its own GitHub Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: transvibe-v1.0.1-TEST
-          path: dist/test/TransVibe-v1.0.1-TEST.apk
+          name: transvibe-v1.0.2-TEST
+          path: dist/test/TransVibe-v1.0.2-TEST.apk
           if-no-files-found: error
           retention-days: 30
       - name: Publish signed RELEASE APK as a separate artifact
         uses: actions/upload-artifact@v4
         with:
-          name: transvibe-v1.0.1-RELEASE
-          path: dist/release/TransVibe-v1.0.1-RELEASE.apk
+          name: transvibe-v1.0.2-RELEASE
+          path: dist/release/TransVibe-v1.0.2-RELEASE.apk
           if-no-files-found: error
           retention-days: 30
       - name: Remove temporary signing keystore, including on failure

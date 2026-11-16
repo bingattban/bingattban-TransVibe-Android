@@ -52,5 +52,12 @@ sleep 2
 adb shell pidof com.transvibe.app.preview >/dev/null
 echo "PASS: installed preview TEST launches independently of the debug instrumentation runner."
 
+# Debug and Release share the production package identity, but not the test
+# signing certificate. Remove only the emulator-installed Debug APK first.
+adb uninstall com.transvibe.app
+# The Release APK here is built with a disposable CI key, never the owner's JKS.
+bash ci/release_apk_smoke.sh app/build/outputs/apk/release/app-release.apk com.transvibe.app
+
+
 echo "PASS: real APK launched and verified in the free emulator."
 echo "No model inference performance claim: this is not a phone-speed benchmark."
