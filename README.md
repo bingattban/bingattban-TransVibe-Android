@@ -1,56 +1,37 @@
 # TransVibe Android
 
-TransVibe is an offline-first Android app for video speech recognition, Arabic
-subtitle translation, and SRT/VTT export. Kotlin, Jetpack Compose, Room,
-Whisper.cpp/JNI and Sherpa-ONNX power the app. Supported native target:
-**arm64-v8a**; Android **minSdk 26**, **targetSdk 36**.
+تطبيق **TransVibe** هو تطبيق Android يعمل دون اتصال بالإنترنت في المقام الأول (Offline-first) للتعرّف على الكلام في الفيديو، وترجمة المقاطع النصية (Subtitles) إلى اللغة العربية، وتصدير ملفات **SRT/VTT**. يعتمد التطبيق في بنائه على **Kotlin** و **Jetpack Compose** و **Room** و **Whisper.cpp/JNI** و **Sherpa-ONNX**. المعمارية الأصلية المدعومة (Native Target): **arm64-v8a**؛ وإصدارات Android المدعومة: **minSdk 26** و **targetSdk 36**.
 
-## Repository structure
+## هيكل المستودع (Repository Structure)
 
-| Path | Purpose |
+| المسار (Path) | الغرض (Purpose) |
 | --- | --- |
-| `app/src/main/` | Android application, C++ JNI sources, UI and required assets |
-| `app/src/test/` | Kotlin unit and regression tests |
-| `app/src/androidTest/` | Device integration, JNI and opt-in performance tests |
-| `app/libs/README.md` | Local AAR dependency instructions |
-| `ci/` | Dependency verification, required vendored Whisper source and benchmark documentation |
-| `tools/` | Source guards, native builders and performance comparison |
-| `.github/workflows/android-ci.yml` | Tests-first CI workflow |
-| `gradle/`, `gradlew*`, `*.gradle.kts` | Reproducible Gradle project and wrapper |
+| `app/src/main/` | تطبيق Android، وملفات مصدر C++ JNI، وواجهة المستخدم (UI)، والأصول (Assets) المطلوبة |
+| `app/src/test/` | اختبارات الوحدات (Unit Tests) واختبارات التراجع (Regression Tests) بلغة Kotlin |
+| `app/src/androidTest/` | اختبارات التكامل على الجهاز، واختبارات JNI، واختبارات الأداء الاختيارية (Opt-in) |
+| `app/libs/README.md` | تعليمات تبعيات ملفات AAR المحلية |
+| `ci/` | التحقق من التبعيات، ومصدر Whisper المضمّن المطلوب، وتوثيق اختبارات الأداء (Benchmarks) |
+| `tools/` | أدوات فحص الكود المصدري (Source Guards)، وأدوات البناء الأصلي (Native Builders)، ومقارنة الأداء |
+| `.github/workflows/android-ci.yml` | سير عمل التكامل المستمر (CI Workflow) القائم على تشغيل الاختبارات أولاً |
+| `gradle/`, `gradlew*`, `*.gradle.kts` | إعدادات مشروع Gradle وأداة Wrapper لضمان بناء قابل لإعادة الإنتاج |
 
-Historical single-use ZIP installation instructions and repair logs are
-preserved in Git history, not in the current project tree.
+تم الاحتفاظ بتعليمات التثبيت السابقة عبر ملفات ZIP ذات الاستخدام الواحد وسجلات الإصلاح في سجل Git التاريخي (`Git history`)، وليس في شجرة المشروع الحالية.
 
-## CI — tests before APK
+## التكامل المستمر (CI) — الاختبارات قبل بناء ملف APK
 
-All pull requests to `main` run source/JNI regression checks, the ARM64
-reference CPU build, and the isolated **DotProd/FP16 experiment**. Once the
-reference JNI binary is verified, Gradle runs Kotlin tests and Android Lint;
-only then does CI produce a debug APK and an instrumentation-test APK.
+تقوم جميع طلبات السحب (Pull Requests) الموجهة إلى الفرع `main` بتشغيل فحوصات التراجع للكود المصدري و JNI، وبناء المعالج المرجعي لمعمارية ARM64، بالإضافة إلى **تجربة DotProd/FP16** المعزولة. وبمجرد التحقق من ملف JNI الثنائي المرجعي، يقوم Gradle بتشغيل اختبارات Kotlin وفحص Android Lint؛ وبعد ذلك فقط يقوم نظام CI بإنتاج ملف Debug APK وملف APK الخاص باختبارات الأجهزة (Instrumentation-test APK).
 
-The DotProd/FP16 binary is **not bundled** into the app APK. It requires a
-supported ARMv8.2 device and real-device performance/correctness testing before
-considering deployment. Vulkan acceleration is **not** enabled.
+ملف DotProd/FP16 الثنائي **غير مضمّن** داخل ملف APK الخاص بالتطبيق؛ إذ يتطلب جهازاً يدعم معمارية ARMv8.2 وإجراء اختبارات الأداء والدقة على جهاز حقيقي قبل النظر في اعتماده للنشر. كما أن تسريع **Vulkan** **غير** مفعّل.
 
-Dependency AARs for FFmpegKit 6.0-2 and Sherpa-ONNX 1.13.5 are downloaded at
-CI time, pinned to the authentic SHA-256 checksums. They are not silently
-substituted or committed here. See [CI setup](ci/README.md).
+يتم تنزيل ملفات التبعيات بصيغة AAR الخاصة بـ **FFmpegKit 6.0-2** و **Sherpa-ONNX 1.13.5** أثناء تشغيل CI، وهي مثبتة بقيم التحقق الأصلية **SHA-256 checksums**. ولا يتم استبدالها بشكل صامت أو رفعها مباشرة إلى المستودع هنا. راجع [إعداد CI](https://www.google.com/search?q=ci/README.md).
 
-The Whisper 1.9.4 source archive at
-`ci/vendor-whisper-source-1.9.4.zip` is **required** to rebuild JNI;
-it is not a disposable export ZIP.
+أرشيف المصدر الخاص بـ **Whisper 1.9.4** الموجود في المسار `ci/vendor-whisper-source-1.9.4.zip` **مطلوب وأساسي** لإعادة بناء طبقة JNI؛ وهو ليس ملف ZIP مؤقتاً للتصدير يمكن الاستغناء عنه.
 
-Download debug builds from successful [GitHub Actions runs](../../actions).
-Running JNI, cancellation, SRT/VTT and speed benchmarks on a *real Android
-device* remains a separate acceptance requirement; successful CI compilation
-alone does not prove faster transcription.
+يمكنك تنزيل نسخ الاختبار (Debug Builds) من \[suspicious link removed\] الناجحة. ويظل تشغيل اختبارات JNI، والإلغاء (Cancellation)، وتصدير SRT/VTT، واختبارات السرعة القياسية (Speed Benchmarks) على *جهاز Android حقيقي* متطلباً مستقلاً للقبول؛ فنجاح عملية البناء في CI وحده لا يثبت زيادة سرعة التفريغ الصوتي.
 
-Benchmark instructions and comparison rules:
-[performance benchmarking](ci/PERFORMANCE_BENCHMARKING.md).
+تعليمات اختبارات الأداء وقواعد المقارنة:
+[قياس الأداء (Performance Benchmarking)](https://www.google.com/search?q=ci/PERFORMANCE_BENCHMARKING.md).
 
-## Privacy and licensing
+## الخصوصية والترخيص (Privacy and Licensing)
 
-Keep downloaded model weights, private videos, user databases, signing keys and
-local benchmark media out of this public repository. No user transcripts are
-needed for the CI benchmarks. The FFmpegKit `min-gpl` distribution has GPLv3
-obligations; review them before distributing an APK.
+احرص على إبقاء أوزان النماذج المنزّلة (Model Weights)، ومقاطع الفيديو الخاصة، وقواعد بيانات المستخدمين، ومفاتيح التوقيع (Signing Keys)، وملفات الوسائط المحلية الخاصة باختبارات الأداء خارج هذا المستودع العام. لا يلزم وجود أي نصوص مفرّغة خاصة بالمستخدمين لإجراء اختبارات الأداء في CI. تخضع توزيعة `min-gpl` الخاصة بمكتبة **FFmpegKit** لالتزامات رخصة **GPLv3**؛ لذا يرجى مراجعتها قبل توزيع أي ملف APK.
