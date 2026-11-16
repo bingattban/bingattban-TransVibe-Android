@@ -64,7 +64,7 @@ This demonstrates why passing build-only tests is insufficient.
 
 ## Independently installable preview TEST APK
 
-The free emulator also builds `app-testing.apk` **after** tests, installs
+The free emulator also builds `app-preview.apk` **after** tests, installs
 `com.transvibe.app.preview` alongside the original app, starts its MainActivity
 and verifies that its process remains alive. Its launcher label is
 `TransVibe Test`. The `.preview` package identity deliberately avoids
