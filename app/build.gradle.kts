@@ -89,7 +89,7 @@ android {
         // The testing APK uses disposable Debug signing, never the owner's JKS.
         create("testing") {
             initWith(getByName("debug"))
-            applicationIdSuffix = ".test"
+            applicationIdSuffix = ".preview"
             matchingFallbacks.add("debug")
             isDebuggable = true
         }
