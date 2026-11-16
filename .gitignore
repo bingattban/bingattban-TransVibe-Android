@@ -23,3 +23,13 @@ app/src/main/jniLibs/**/*.so
 *.jks
 *.log
 app/src/main/assets/models/
+
+# Packaged artifacts and disposable diagnostics
+*.apk
+*.aab
+*.tmp
+*.bak
+*.orig
+*.swp
+*.pyc
+**/__pycache__/
