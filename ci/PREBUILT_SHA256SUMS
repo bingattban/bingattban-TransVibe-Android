@@ -1,0 +1,5 @@
+11c1fd0ef76edb91fb3b7a1d6d0619914c914126896397367813f87805644c82  app/libs/ffmpeg-kit-min-gpl-6.0-2.aar
+6419cd8bc983e0c4fab06067f0fe0313fdc0f7103818ac1e7a08d50787b7a82b  app/libs/sherpa-onnx-1.13.5.aar
+077dec5e2d821234c7dc0aba584bec8f999854b546c754cab93a90741c56fbeb  app/libs/onnxruntime-android-1.27.0.aar
+5b96aaa5f191dedbef72fb0c38f1a2b01807920afc0d92a75a2acd6e0cc7703c  app/libs/smart-exception-java-0.2.1.jar
+b80f23ea9a322c7e0f2e4de7508c882103d6a43333e7050417d8c4b02cce8691  app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
