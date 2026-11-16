@@ -1,24 +1,34 @@
-# Code On The Go — TransVibe offline Android libraries
+# TransVibe — verified Android binaries included in this repository
 
-Copy these **real** binary files into this exact folder (`app/libs`) on the phone:
+The user-approved binaries are committed to `app/libs/` and are shipped with the
+source checkout. Do not copy libraries manually to build the Android app.
 
-- `sherpa-onnx-1.13.5.aar`
-- `onnxruntime-android-1.27.0.aar` (used only if Sherpa AAR does not bundle `libonnxruntime.so`)
-- `ffmpeg-kit-min-gpl-6.0-2.aar` **OR** `ffmpeg-kit-free81-8.1.9-arm64-v8a-x86_64.aar`
-- `smart-exception-java-0.2.1.jar` (optional when Maven Central is reachable)
+| Path | Role |
+| --- | --- |
+| `ffmpeg-kit-min-gpl-6.0-2.aar` | Optional FFmpeg audio-extraction fallback |
+| `sherpa-onnx-1.13.5.aar` | Offline fast-ASR recognizers, bundles `libonnxruntime.so` |
+| `onnxruntime-android-1.27.0.aar` | Pinned standby dependency; **not linked** while Sherpa bundles ONNX |
+| `smart-exception-java-0.2.1.jar` | FFmpegKit helper used in offline builds |
 
-These archives are not in this source ZIP because they were not uploaded. **Do not rename arbitrary files to `.aar`.**
+**Whisper JNI is NOT an AAR and must not be placed in this directory.**
+The corrected, verified ARM64 CPU library is committed at
+`app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so`.
+The older owner-supplied Vulkan ELF was deliberately rejected because it lacks
+the current `nativeBackendForContext` JNI method. This does **not** enable Vulkan.
 
-After copying, refresh/sync Gradle and build `:app:assembleDebug`. In Code On The Go,
-if an old `Null extracted folder` error persists, stop Gradle, clear the project-only
-`.gradle/` and `app/build/` caches (DO NOT touch `app/libs` or application data), then retry.
+Use `ci/PREBUILT_SHA256SUMS` and `python3 tools/test_vendored_android_libraries.py`
+for exact SHA-256, ZIP/AAR structure and dependency checks. Native ELF and JNI
+bindings are validated by `tools/verify_native_jni_contract.py`.
 
-`settings.gradle.kts` validates the ZIP structure (`AndroidManifest.xml` and
-`classes.jar`, if present) and stages local Maven copies under `.gradle/transvibe-local-aars`.
-This bypasses the direct local-file artifact variant. If there is still an extraction
-error, provide `--stacktrace` and the AAR file for verification; this workaround
-cannot repair a damaged or ABI-incompatible binary.
+Gradle reads pinned AARs as `local.transvibe` Maven coordinates and stores
+generated temporary copies under ignored `.gradle/transvibe-local-aars/`.
+No model weights are bundled. Users add models to the installed app separately.
 
-**No model weights are bundled**: users install model files after app installation.
+On the phone, use Code On The Go to run `:app:assembleDebug`. The native
+library is **precompiled**; no Android NDK or CMake rebuild is performed by
+the normal application Gradle build. First-time Gradle/Android dependencies
+may still require the Internet even with the bundled AAR/JARs.
 
-**Licensing**: If choosing FFmpegKit min-gpl, check GPL obligations before distribution.
+**Licensing:** FFmpegKit `min-gpl` contains GPL-3.0 license and source notices.
+Before redistributing APKs, review these obligations and verify corresponding
+sources and license text are made available. See `ci/VERIFIED_BINARIES.md`.
