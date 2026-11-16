@@ -29,6 +29,7 @@ jobs:
           python3 tools/test_native_jni_contract.py
           python3 tools/test_ci_aar_contract.py
           python3 tools/test_benchmark_compare.py
+          python3 tools/test_repository_layout.py
           bash -n tools/build_native_arm64_dotprod_experimental.sh
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
