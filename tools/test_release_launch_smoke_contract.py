@@ -32,6 +32,11 @@ class ReleaseStartupGateContractTest(unittest.TestCase):
         self.assertIn("if: always()", workflow)
         self.assertIn("build/emulator-diagnostics/", workflow)
 
+    def test_obfuscation_mapping_kept_for_failed_release_emulator(self):
+        workflow = (ROOT / ".github/workflows/free-android-emulator.yml").read_text()
+        self.assertIn("ci/inspect_release_mapping.sh", workflow)
+        self.assertIn("app/build/outputs/mapping/release/mapping.txt", workflow)
+
     def test_emulator_smoke_detects_real_startup_crashes(self):
         smoke = (ROOT / "ci/release_apk_smoke.sh").read_text()
         for required in ("adb install", "adb logcat -c", "am start -W",
