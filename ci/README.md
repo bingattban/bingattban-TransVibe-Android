@@ -6,13 +6,14 @@ for native research; Android CI is self-contained.
 
 ## Required checks
 
-1. Source, JNI, repository-layout and benchmark-comparison regression tests.
+1. Source, JNI, repository-layout, committed binary SHA-256/ZIP and benchmark-comparison regression tests.
 2. Reproducible ARM64 **CPU reference** JNI build using Whisper.cpp 1.9.4,
    Android NDK 28.2.13676358, API 26.
 3. **Separate non-shipping** ARMv8.2 DotProd/FP16 JNI experimental build and
    ELF/JNI verification.
-4. Install verified dependency AARs; run Gradle Kotlin tests and Android Lint
-   before building debug and androidTest APKs.
+4. Verify the already committed dependency AAR/JAR and JNI ELF; run Gradle Kotlin
+   tests and Android Lint before building debug and androidTest APKs.
+   The production APK packages the pinned committed CPU JNI, not the experimental DotProd variant.
 
 All required jobs must pass on the **same commit** before merging.
 The test APK is built in CI but device instrumentation tests are not claimed to
@@ -25,21 +26,24 @@ Owner-supplied `ffmpeg-kit-min-gpl-6.0-2.aar` (2026-11-15):
 36,190,865 bytes, SHA-256
 `11c1fd0ef76edb91fb3b7a1d6d0619914c914126896397367813f87805644c82`.
 
-CI downloads the exact historical artifact and checks SHA-256 before Gradle.
+When already committed, CI checks the exact artifact checksum without downloading it.
 The same mirrored package passed this check in GitHub Actions run
 [43903062476](https://github.com/bingattban/bingattban-TransVibe-Android/actions/runs/43903062476).
 If its source becomes unavailable, set `FFMPEG_AAR_URL` in GitHub Actions
 Variables to another authentic location while retaining the pinned checksum.
 Never replace the file silently or remove checksum verification.
 
-Sherpa-ONNX 1.13.5 AAR is downloaded from its upstream release and verified
+Sherpa-ONNX 1.13.5 AAR was retrieved from its upstream release and is verified
 against SHA-256 `6419cd8bc983e0c4fab06067f0fe0313fdc0f7103818ac1e7a08d50787b7a82b`.
 Optional URL/SHA overrides are `SHERPA_AAR_URL` and `SHERPA_AAR_SHA256`;
 an override must point to an inspected authentic matching file.
 
-The binary dependencies are intentionally not committed to this public source
-tree. FFmpegKit `min-gpl` carries GPLv3 distribution obligations and includes
-license/source notice assets; consult these before public APK distribution.
+The four original AAR/JAR dependencies and a corrected CPU Whisper JNI ELF are
+**committed** in this public repository, verified by `ci/PREBUILT_SHA256SUMS`.
+The project's normal APK build does not need to rebuild C++ or download these
+specific libraries. See [VERIFIED_BINARIES.md](VERIFIED_BINARIES.md) for pinned
+SHA-256, provenance, excluded duplicate ONNX packaging, and redistribution
+notices (including FFmpegKit `min-gpl` GPLv3 obligations).
 
 ## Files that must remain
 

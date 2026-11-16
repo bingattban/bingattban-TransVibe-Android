@@ -18,6 +18,14 @@ GENERATED_DIRS = frozenset({
 })
 GENERATED_SUFFIXES = (".apk", ".aab", ".log", ".tmp", ".bak", ".orig", ".swp", ".pyc", ".class")
 REQUIRED_VENDOR_ZIP = "ci/vendor-whisper-source-1.9.4.zip"
+APPROVED_COMMITTED_BINARIES = frozenset({
+    "gradle/wrapper/gradle-wrapper.jar",  # Required Gradle bootstrap, not a dependency AAR.
+    "app/libs/ffmpeg-kit-min-gpl-6.0-2.aar",
+    "app/libs/sherpa-onnx-1.13.5.aar",
+    "app/libs/onnxruntime-android-1.27.0.aar",
+    "app/libs/smart-exception-java-0.2.1.jar",
+    "app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so",
+})
 
 
 def find_strays(paths: list[str]) -> list[str]:
@@ -36,6 +44,8 @@ def find_strays(paths: list[str]) -> list[str]:
             problems.append(f"Unexpected top-level directory: {path}")
         if path.endswith(GENERATED_SUFFIXES):
             problems.append(f"Generated output in Git: {path}")
+        if path.endswith((".aar", ".jar", ".so")) and path not in APPROVED_COMMITTED_BINARIES:
+            problems.append(f"Unapproved committed binary: {path}")
         if path.endswith(".zip") and path != REQUIRED_VENDOR_ZIP:
             problems.append(f"Unapproved ZIP snapshot: {path}")
     return sorted(set(problems))
@@ -67,6 +77,13 @@ class ProjectLayoutTests(unittest.TestCase):
             "TransVibe_2026-11-15.zip", "app/build/outputs/app.apk",
             "tools/__pycache__/test.pyc",
         ])), 5)
+
+    def test_only_pinned_android_binary_paths_are_allowed(self):
+        self.assertEqual([], find_strays(sorted(APPROVED_COMMITTED_BINARIES)))
+        self.assertGreaterEqual(len(find_strays([
+            "app/libs/unknown.aar", "app/libs/old.jar",
+            "app/src/main/jniLibs/arm64-v8a/legacy.so"
+        ])), 3)
 
     def test_unrelated_archive_is_rejected_even_inside_ci(self):
         self.assertEqual(1, len(find_strays(["ci/transvibe-old.zip"])))
