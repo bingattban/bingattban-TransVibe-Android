@@ -58,6 +58,21 @@ jobs:
           sha256sum -c ci/PREBUILT_SHA256SUMS
           python3 tools/test_release_signing_contract.py
           python3 tools/verify_native_jni_contract.py --project . --library app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
+      - name: Build separate testing APK with no release secrets
+        run: |
+          set -euo pipefail
+          # Uses disposable Debug signing; package com.transvibe.app.test.
+          # A TEST APK cannot overwrite or conflict with the official Release.
+          ./gradlew --no-daemon :app:assembleTesting
+          apk="app/build/outputs/apk/testing/app-testing.apk"
+          test -s "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
+            grep -F "package: name='com.transvibe.app.test' versionCode='2' versionName='1.0.1'"
+          mkdir -p dist/test
+          cp "$apk" dist/test/TransVibe-v1.0.1-TEST.apk
+          sha256sum dist/test/TransVibe-v1.0.1-TEST.apk
+
       - name: Restore owner's signing keystore only into temporary private storage
         shell: bash
         env:
@@ -112,16 +127,22 @@ jobs:
           }
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
             grep -F "package: name='com.transvibe.app' versionCode='2' versionName='1.0.1'"
-          mkdir -p dist
-          cp "$apk" "dist/TransVibe-v1.0.1-arm64-signed.apk"
-          (cd dist && sha256sum "TransVibe-v1.0.1-arm64-signed.apk" > SHA256SUMS)
-          printf 'Version: 1.0.1 (2)\nCommit: %s\nApp ID: com.transvibe.app\nSigning certificate SHA-256: %s\n' "$RELEASE_SHA" "$apk_cert_sha" > dist/BUILD_INFO.txt
+          mkdir -p dist/release
+          cp "$apk" "dist/release/TransVibe-v1.0.1-RELEASE.apk"
+          sha256sum dist/release/TransVibe-v1.0.1-RELEASE.apk
           echo "Release APK signature and version confirmed; only the public certificate fingerprint was recorded."
-      - name: Upload signed APK and integrity metadata
+      - name: Publish TEST APK as its own GitHub Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: transvibe-v1.0.1-arm64-signed-release
-          path: dist/
+          name: transvibe-v1.0.1-TEST
+          path: dist/test/TransVibe-v1.0.1-TEST.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish signed RELEASE APK as a separate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-v1.0.1-RELEASE
+          path: dist/release/TransVibe-v1.0.1-RELEASE.apk
           if-no-files-found: error
           retention-days: 30
       - name: Remove temporary signing keystore, including on failure
