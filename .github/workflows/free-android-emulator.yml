@@ -60,6 +60,15 @@ jobs:
             ./gradlew --no-daemon :app:assembleRelease
           test -s app/build/outputs/apk/release/app-release.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
+      - name: Inspect R8 class-name mapping for crash
+        run: bash ci/inspect_release_mapping.sh
+      - name: Preserve Release R8 mapping for stack retrace
+        uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-release-r8-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+          retention-days: 7
       - name: Keep Release startup logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
