@@ -87,7 +87,7 @@ android {
 
         // A separate app ID makes TEST install beside the final Release.
         // The testing APK uses disposable Debug signing, never the owner's JKS.
-        create("testing") {
+        create("preview") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".preview"
             matchingFallbacks.add("debug")
