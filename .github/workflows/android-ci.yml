@@ -147,18 +147,20 @@ jobs:
             app/build/intermediates/lint_intermediate_text_report/
           if-no-files-found: warn
           retention-days: 14
-      - name: Build debug and instrumentation APKs, then validate unsigned release after tests
+      - name: Build DEBUG instrumentation, installable TEST, then validate unsigned RELEASE
         run: |
-          # R8/minification and Release packaging must work before secrets are used.
-          # This PR validation produces an UNSIGNED Release, which is not uploaded.
-          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleRelease
+          set -euo pipefail
+          # All APKs must build AFTER unit tests and Android Lint.
+          # The user-downloadable TEST has a separate package identity.
+          # RELEASE in pull requests is UNSIGNED and never published.
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assembleTesting :app:assembleRelease
+          test -s app/build/outputs/apk/testing/app-testing.apk
           find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -size +0c | grep -q .
-      - uses: actions/upload-artifact@v4
+      - name: Upload only the separate installable TEST APK from pull-request checks
         if: success()
+        uses: actions/upload-artifact@v4
         with:
-          name: transvibe-debug-apks
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/androidTest/debug/*.apk
+          name: transvibe-pr-TEST
+          path: app/build/outputs/apk/testing/app-testing.apk
           if-no-files-found: error
           retention-days: 14
