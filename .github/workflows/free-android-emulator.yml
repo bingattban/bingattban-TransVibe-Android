@@ -34,6 +34,7 @@ jobs:
           set -euo pipefail
           sha256sum -c ci/PREBUILT_SHA256SUMS
           python3 tools/test_vendored_android_libraries.py
+          python3 tools/test_ffmpeg_runtime_dependencies.py
           python3 tools/test_free_emulator_ci.py
       - name: Exclude Code On The Go-only debug provider from hosted emulator
         run: |
