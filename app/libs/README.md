@@ -9,6 +9,7 @@ source checkout. Do not copy libraries manually to build the Android app.
 | `sherpa-onnx-1.13.5.aar` | Offline fast-ASR recognizers, bundles `libonnxruntime.so` |
 | `onnxruntime-android-1.27.0.aar` | Pinned standby dependency; **not linked** while Sherpa bundles ONNX |
 | `smart-exception-java-0.2.1.jar` | FFmpegKit helper used in offline builds |
+| `smart-exception-common-0.2.1.jar` | FFmpegKit runtime PackageLoader required alongside Java helper |
 
 **Whisper JNI is NOT an AAR and must not be placed in this directory.**
 The corrected, verified ARM64 CPU library is committed at

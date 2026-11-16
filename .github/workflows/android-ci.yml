@@ -29,6 +29,7 @@ jobs:
           python3 tools/test_native_jni_contract.py
           python3 tools/test_ci_aar_contract.py
           python3 tools/test_vendored_android_libraries.py
+          python3 tools/test_ffmpeg_runtime_dependencies.py
           python3 tools/verify_native_jni_contract.py --project . --library app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
           python3 tools/test_benchmark_compare.py
           python3 tools/test_repository_layout.py

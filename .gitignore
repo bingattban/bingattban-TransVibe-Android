@@ -22,6 +22,7 @@ app/libs/*.aar
 !app/libs/onnxruntime-android-1.27.0.aar
 app/libs/*.jar
 !app/libs/smart-exception-java-0.2.1.jar
+!app/libs/smart-exception-common-0.2.1.jar
 app/src/main/jniLibs/**/*.so
 !app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
 *.keystore

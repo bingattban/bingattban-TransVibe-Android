@@ -24,6 +24,7 @@ APPROVED_COMMITTED_BINARIES = frozenset({
     "app/libs/sherpa-onnx-1.13.5.aar",
     "app/libs/onnxruntime-android-1.27.0.aar",
     "app/libs/smart-exception-java-0.2.1.jar",
+    "app/libs/smart-exception-common-0.2.1.jar",
     "app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so",
 })
 

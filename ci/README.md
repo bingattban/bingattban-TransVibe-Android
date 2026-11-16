@@ -38,7 +38,8 @@ against SHA-256 `6419cd8bc983e0c4fab06067f0fe0313fdc0f7103818ac1e7a08d50787b7a82
 Optional URL/SHA overrides are `SHERPA_AAR_URL` and `SHERPA_AAR_SHA256`;
 an override must point to an inspected authentic matching file.
 
-The four original AAR/JAR dependencies and a corrected CPU Whisper JNI ELF are
+The four original AAR/JAR dependencies, the missing authentic Smart Exception
+common JAR, and a corrected CPU Whisper JNI ELF are
 **committed** in this public repository, verified by `ci/PREBUILT_SHA256SUMS`.
 The project's normal APK build does not need to rebuild C++ or download these
 specific libraries. See [VERIFIED_BINARIES.md](VERIFIED_BINARIES.md) for pinned
@@ -66,3 +67,11 @@ native tests, Gradle files, app resources, or the benchmark toolkit as
 See [PERFORMANCE_BENCHMARKING.md](PERFORMANCE_BENCHMARKING.md).
 The experimental DotProd binary is **not** the one bundled into the standard
 APK. No quantified speed improvement or Vulkan enablement is claimed.
+
+## Free emulator smoke tests
+
+A separate [free Android emulator workflow](../.github/workflows/free-android-emulator.yml)
+checks APK startup, JNI missing-model handling, FFmpegKit runtime initialization
+and RTF arithmetic on API 35 using a standard public GitHub runner.
+See [FREE_EMULATOR_TESTING.md](FREE_EMULATOR_TESTING.md). This is **not** a
+Whisper/Arabic translation speed benchmark for an actual ARM64 smartphone.
