@@ -85,6 +85,15 @@ android {
             isDebuggable = true
         }
 
+        // A separate app ID makes TEST install beside the final Release.
+        // The testing APK uses disposable Debug signing, never the owner's JKS.
+        create("testing") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".test"
+            matchingFallbacks.add("debug")
+            isDebuggable = true
+        }
+
         release {
             // On PRs, build an unsigned release for R8 validation without secrets.
             // Only the trusted post-main-CI workflow receives this signing config.
