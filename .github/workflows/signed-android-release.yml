@@ -57,6 +57,7 @@ jobs:
           set -euo pipefail
           sha256sum -c ci/PREBUILT_SHA256SUMS
           python3 tools/test_release_signing_contract.py
+          python3 tools/test_apk_artifact_separation.py
           python3 tools/verify_native_jni_contract.py --project . --library app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
       - name: Build separate testing APK with no release secrets
         run: |
