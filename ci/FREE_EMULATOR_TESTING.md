@@ -61,3 +61,12 @@ The missing class lives in the authentic upstream
 Both JARs are required because a local FFmpegKit AAR does not automatically
 carry Maven's transitive dependencies.
 This demonstrates why passing build-only tests is insufficient.
+
+## Independently installable preview TEST APK
+
+The free emulator also builds `app-testing.apk` **after** tests, installs
+`com.transvibe.app.preview` alongside the original app, starts its MainActivity
+and verifies that its process remains alive. Its launcher label is
+`TransVibe Test`. The `.preview` package identity deliberately avoids
+`com.transvibe.app.test`, reserved for Android instrumentation in this project.
+The private owner release-signing key is never used for preview.
