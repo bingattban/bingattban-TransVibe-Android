@@ -30,6 +30,7 @@ class IndependentApkArtifactsTest(unittest.TestCase):
 
     def test_signed_workflow_publishes_exactly_two_separate_apks(self):
         workflow = (ROOT / ".github/workflows/signed-android-release.yml").read_text()
+        gradle = (ROOT / "app/build.gradle.kts").read_text()
         self.assertIn(":app:assembleTesting", workflow)
         self.assertIn(":app:assembleRelease", workflow)
         self.assertLess(workflow.index(":app:assembleTesting"), workflow.index(":app:assembleRelease"))
@@ -45,6 +46,14 @@ class IndependentApkArtifactsTest(unittest.TestCase):
         self.assertIn("workflow_run:", workflow)
         self.assertIn("workflow_run.conclusion == 'success'", workflow)
         self.assertNotIn("pull_request:", workflow)
+
+    def test_preview_installed_from_actual_apk_in_free_emulator(self):
+        smoke = (ROOT / "ci/free_emulator_smoke.sh").read_text()
+        workflow = (ROOT / ".github/workflows/free-android-emulator.yml").read_text()
+        self.assertIn(":app:assembleTesting", workflow)
+        self.assertIn("app/build/outputs/apk/testing/app-testing.apk", smoke)
+        self.assertIn("com.transvibe.app.preview", smoke)
+        self.assertIn("adb shell am start -W", smoke)
 
     def test_testing_apk_build_does_not_receive_owner_signing_secrets(self):
         workflow = (ROOT / ".github/workflows/signed-android-release.yml").read_text()
