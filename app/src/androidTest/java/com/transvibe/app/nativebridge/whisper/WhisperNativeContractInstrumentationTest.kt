@@ -9,7 +9,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.lang.reflect.InvocationTargetException
-import androidx.test.platform.app.InstrumentationRegistry
 
 /**
  * Real ARM64 JNI registration smoke tests. Run on an Android device with the actual .so.
