@@ -69,10 +69,10 @@ jobs:
           test -s "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose "$apk"
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
-            grep -F "package: name='com.transvibe.app.preview' versionCode='2' versionName='1.0.1'"
+            grep -F "package: name='com.transvibe.app.preview' versionCode='3' versionName='1.0.2'"
           mkdir -p dist/test
-          cp "$apk" dist/test/TransVibe-v1.0.1-TEST.apk
-          sha256sum dist/test/TransVibe-v1.0.1-TEST.apk
+          cp "$apk" dist/test/TransVibe-v1.0.2-TEST.apk
+          sha256sum dist/test/TransVibe-v1.0.2-TEST.apk
 
       - name: Restore owner's signing keystore only into temporary private storage
         shell: bash
@@ -129,10 +129,10 @@ jobs:
             exit 1
           }
           "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk" |
-            grep -F "package: name='com.transvibe.app' versionCode='2' versionName='1.0.1'"
+            grep -F "package: name='com.transvibe.app' versionCode='3' versionName='1.0.2'"
           mkdir -p dist/release
-          cp "$apk" "dist/release/TransVibe-v1.0.1-RELEASE.apk"
-          sha256sum dist/release/TransVibe-v1.0.1-RELEASE.apk
+          cp "$apk" "dist/release/TransVibe-v1.0.2-RELEASE.apk"
+          sha256sum dist/release/TransVibe-v1.0.2-RELEASE.apk
           echo "Release APK signature and version confirmed; only the public certificate fingerprint was recorded."
       - name: Remove private signing key before invoking third-party emulator action
         shell: bash
@@ -158,7 +158,7 @@ jobs:
           ram-size: 3072M
           disable-animations: true
           emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
-          script: bash ci/release_apk_smoke.sh dist/release/TransVibe-v1.0.1-RELEASE.apk com.transvibe.app
+          script: bash ci/release_apk_smoke.sh dist/release/TransVibe-v1.0.2-RELEASE.apk com.transvibe.app
       - name: Save official Release launch failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -170,15 +170,15 @@ jobs:
       - name: Publish TEST APK as its own GitHub Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: transvibe-v1.0.1-TEST
-          path: dist/test/TransVibe-v1.0.1-TEST.apk
+          name: transvibe-v1.0.2-TEST
+          path: dist/test/TransVibe-v1.0.2-TEST.apk
           if-no-files-found: error
           retention-days: 30
       - name: Publish signed RELEASE APK as a separate artifact
         uses: actions/upload-artifact@v4
         with:
-          name: transvibe-v1.0.1-RELEASE
-          path: dist/release/TransVibe-v1.0.1-RELEASE.apk
+          name: transvibe-v1.0.2-RELEASE
+          path: dist/release/TransVibe-v1.0.2-RELEASE.apk
           if-no-files-found: error
           retention-days: 30
       - name: Remove temporary signing keystore, including on failure
