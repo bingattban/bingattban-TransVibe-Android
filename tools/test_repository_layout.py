@@ -19,6 +19,7 @@ GENERATED_DIRS = frozenset({
 GENERATED_SUFFIXES = (".apk", ".aab", ".log", ".tmp", ".bak", ".orig", ".swp", ".pyc", ".class")
 REQUIRED_VENDOR_ZIP = "ci/vendor-whisper-source-1.9.4.zip"
 APPROVED_COMMITTED_BINARIES = frozenset({
+    "gradle/wrapper/gradle-wrapper.jar",  # Required Gradle bootstrap, not a dependency AAR.
     "app/libs/ffmpeg-kit-min-gpl-6.0-2.aar",
     "app/libs/sherpa-onnx-1.13.5.aar",
     "app/libs/onnxruntime-android-1.27.0.aar",
