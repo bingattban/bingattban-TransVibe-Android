@@ -38,7 +38,7 @@ and passwords; a public certificate hash alone cannot restore the private key.
 
    | GitHub artifact | File inside | Android package |
    | --- | --- | --- |
-   | `transvibe-v1.0.1-TEST` | `TransVibe-v1.0.1-TEST.apk` | `com.transvibe.app.test` |
+   | `transvibe-v1.0.1-TEST` | `TransVibe-v1.0.1-TEST.apk` | `com.transvibe.app.preview` |
    | `transvibe-v1.0.1-RELEASE` | `TransVibe-v1.0.1-RELEASE.apk` | `com.transvibe.app` |
 
    TEST is visibly labelled **TransVibe Test**, is debuggable, and is signed
