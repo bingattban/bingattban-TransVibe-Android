@@ -28,6 +28,8 @@ jobs:
           python3 tools/verify_regression_guards.py
           python3 tools/test_native_jni_contract.py
           python3 tools/test_ci_aar_contract.py
+          python3 tools/test_benchmark_compare.py
+          bash -n tools/build_native_arm64_dotprod_experimental.sh
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
           g++ -std=c++17 -Wall -Wextra -Werror -fsyntax-only app/src/main/cpp/native-lib.cpp -I app/src/main/cpp 2>/dev/null || echo 'INFO: Android JNI bridge requires NDK headers; native job compiles it.'
@@ -56,6 +58,33 @@ jobs:
         with:
           name: transvibe-native-arm64-cpu
           path: native-output/
+          if-no-files-found: error
+          retention-days: 14
+
+  native-dotprod-experiment:
+    name: Build experimental ARMv8.2 DotProd JNI (not shipped)
+    needs: source-checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v4
+      - name: Install Android NDK for experimental ARM64
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager --install 'ndk;28.2.13676358' 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Build and check experimental DotProd/FP16 JNI
+        run: |
+          unzip -q ci/vendor-whisper-source-1.9.4.zip
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.2.13676358"
+          bash tools/build_native_arm64_dotprod_experimental.sh
+          mkdir -p dotprod-output
+          cp build/native-arm64-dotprod-experimental/libtransvibe_native.so dotprod-output/
+          cp build/native-arm64-dotprod-experimental/transvibe_native_provenance.txt dotprod-output/
+          sha256sum dotprod-output/libtransvibe_native.so > dotprod-output/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: transvibe-native-arm64-dotprod-experimental
+          path: dotprod-output/
           if-no-files-found: error
           retention-days: 14
 
