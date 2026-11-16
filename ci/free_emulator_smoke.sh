@@ -41,8 +41,8 @@ if ! grep -q '^INSTRUMENTATION_CODE: -1' build/emulator-diagnostics/instrumentat
   exit 1
 fi
 # Preview must be independent from the official app and instrumentation APK.
-test -s app/build/outputs/apk/testing/app-testing.apk
-adb install -r app/build/outputs/apk/testing/app-testing.apk
+test -s app/build/outputs/apk/preview/app-preview.apk
+adb install -r app/build/outputs/apk/preview/app-preview.apk
 adb shell pm list packages | tr -d '\r' | grep -Fx 'package:com.transvibe.app.preview'
 adb shell am force-stop com.transvibe.app || true
 adb shell am start -W -n com.transvibe.app.preview/com.transvibe.app.MainActivity |
