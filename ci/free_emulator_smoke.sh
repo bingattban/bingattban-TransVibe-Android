@@ -40,5 +40,17 @@ if ! grep -q '^INSTRUMENTATION_CODE: -1' build/emulator-diagnostics/instrumentat
   echo "ERROR: Android instrumentation did not finish successfully." >&2
   exit 1
 fi
+# Preview must be independent from the official app and instrumentation APK.
+test -s app/build/outputs/apk/preview/app-preview.apk
+adb install -r app/build/outputs/apk/preview/app-preview.apk
+adb shell pm list packages | tr -d '\r' | grep -Fx 'package:com.transvibe.app.preview'
+adb shell am force-stop com.transvibe.app || true
+adb shell am start -W -n com.transvibe.app.preview/com.transvibe.app.MainActivity |
+  tee build/emulator-diagnostics/preview-launch.log
+grep -q 'Status: ok' build/emulator-diagnostics/preview-launch.log
+sleep 2
+adb shell pidof com.transvibe.app.preview >/dev/null
+echo "PASS: installed preview TEST launches independently of the debug instrumentation runner."
+
 echo "PASS: real APK launched and verified in the free emulator."
 echo "No model inference performance claim: this is not a phone-speed benchmark."

@@ -33,6 +33,8 @@ jobs:
           python3 tools/verify_native_jni_contract.py --project . --library app/src/main/jniLibs/arm64-v8a/libtransvibe_native.so
           python3 tools/test_benchmark_compare.py
           python3 tools/test_repository_layout.py
+          python3 tools/test_release_signing_contract.py
+          python3 tools/test_apk_artifact_separation.py
           bash -n tools/build_native_arm64_dotprod_experimental.sh
           test -s ci/vendor-whisper-source-1.9.4.zip
           unzip -tq ci/vendor-whisper-source-1.9.4.zip
@@ -146,15 +148,20 @@ jobs:
             app/build/intermediates/lint_intermediate_text_report/
           if-no-files-found: warn
           retention-days: 14
-      - name: Build debug app and instrumentation APKs only after tests
+      - name: Build DEBUG instrumentation, installable TEST, then validate unsigned RELEASE
         run: |
-          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
-      - uses: actions/upload-artifact@v4
+          set -euo pipefail
+          # All APKs must build AFTER unit tests and Android Lint.
+          # The user-downloadable TEST has a separate package identity.
+          # RELEASE in pull requests is UNSIGNED and never published.
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest :app:assemblePreview :app:assembleRelease
+          test -s app/build/outputs/apk/preview/app-preview.apk
+          find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' -size +0c | grep -q .
+      - name: Upload only the separate installable TEST APK from pull-request checks
         if: success()
+        uses: actions/upload-artifact@v4
         with:
-          name: transvibe-debug-apks
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/androidTest/debug/*.apk
+          name: transvibe-pr-TEST
+          path: app/build/outputs/apk/preview/app-preview.apk
           if-no-files-found: error
           retention-days: 14
