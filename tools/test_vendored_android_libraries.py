@@ -55,7 +55,8 @@ class VendoredAndroidLibrariesTest(unittest.TestCase):
         for path, expected in manifest_records().items():
             binary = ROOT / path
             self.assertTrue(binary.is_file(), path)
-            digest = hashlib.file_digest(binary.open("rb"), "sha256").hexdigest()
+            with binary.open("rb") as handle:
+                digest = hashlib.file_digest(handle, "sha256").hexdigest()
             self.assertEqual(expected, digest, path)
             self.assertLess(binary.stat().st_size, 100 * 1024 * 1024, path)
 
