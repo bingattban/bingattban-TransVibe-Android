@@ -49,3 +49,15 @@ Consult [PERFORMANCE_BENCHMARKING.md](PERFORMANCE_BENCHMARKING.md).
 - If the emulator lacks ARM translation, this workflow should be fixed by
   adding a **separately built and verified x86_64 test-only JNI** rather than
   silently changing the production binary or deleting native smoke tests.
+
+## FFmpegKit runtime issue discovered by emulator
+
+The initial installed-app smoke run caught
+`NoClassDefFoundError: com/arthenica/smartexception/PackageLoader`.
+The existing `smart-exception-java-0.2.1.jar` contains
+`java/Exceptions.class` but **not** `PackageLoader`.
+The missing class lives in the authentic upstream
+`smart-exception-common-0.2.1.jar`, now pinned and committed.
+Both JARs are required because a local FFmpegKit AAR does not automatically
+carry Maven's transitive dependencies.
+This demonstrates why passing build-only tests is insufficient.
