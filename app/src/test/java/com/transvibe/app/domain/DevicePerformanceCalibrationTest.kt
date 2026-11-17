@@ -106,6 +106,17 @@ class DevicePerformanceCalibrationTest {
     }
 
     @Test
+    fun modelSpecificCalibrationCannotLeakBetweenDifferentWhisperModelIdentities() {
+        val model = OfficialWhisperModels.recommended
+        val variant = model.copy(id = "tiny-user-variant")
+        val replacedWeights = model.copy(sha256 = "f".repeat(64))
+        val current = DevicePerformanceCompatibility.key("1.0.2", model)
+        assertNotEquals(current, DevicePerformanceCompatibility.key("1.0.2", variant))
+        assertNotEquals(current, DevicePerformanceCompatibility.key("1.0.2", replacedWeights))
+        assertEquals(current, DevicePerformanceCompatibility.key("1.0.9", model))
+    }
+
+    @Test
     fun compatibilityKeyChangesOnMajorOrArchitectureChange() {
         val model = OfficialWhisperModels.recommended
         val v1 = DevicePerformanceCompatibility.key("1.9.7", model)
