@@ -67,7 +67,7 @@ fun ResultsScreen(session: ProcessingSession?, onPlay: () -> Unit, onHome: () ->
         item {
             ScreenHeroHeader(
                 title = stringResource(R.string.tv_results_title),
-                subtitle = session?.videoName ?: stringResource(R.string.player_no_result),
+                subtitle = session?.videoName?.let { ResultsTextFormatter.compactVideoName(it) } ?: stringResource(R.string.player_no_result),
                 icon = Icons.Rounded.CheckCircle
             )
         }
@@ -108,11 +108,12 @@ fun ResultsScreen(session: ProcessingSession?, onPlay: () -> Unit, onHome: () ->
                         BentoMetricCard(
                             icon = Icons.Rounded.Memory,
                             label = stringResource(R.string.tv_results_backend),
-                            value = when {
-                                report.gpuBackend.startsWith("GPU|") -> stringResource(R.string.tv_backend_gpu) + " " + report.gpuBackend.substringAfter('|')
-                                report.gpuBackend.startsWith("CPU|") -> stringResource(R.string.tv_backend_cpu) + " " + report.gpuBackend.substringAfter('|')
-                                else -> stringResource(R.string.tv_backend_unverified)
-                            },
+                            value = ResultsTextFormatter.backend(
+                                rawBackend = report.gpuBackend,
+                                cpuLabel = stringResource(R.string.tv_backend_cpu),
+                                gpuLabel = stringResource(R.string.tv_backend_gpu),
+                                unknownLabel = stringResource(R.string.tv_backend_unverified)
+                            ),
                             modifier = Modifier.weight(1f)
                         )
                     }
