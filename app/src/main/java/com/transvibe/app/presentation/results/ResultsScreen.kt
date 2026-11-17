@@ -67,7 +67,7 @@ fun ResultsScreen(session: ProcessingSession?, onPlay: () -> Unit, onHome: () ->
         item {
             ScreenHeroHeader(
                 title = stringResource(R.string.tv_results_title),
-                subtitle = session?.videoName?.let(ResultsTextFormatter::compactVideoName) ?: stringResource(R.string.player_no_result),
+                subtitle = session?.videoName?.let { ResultsTextFormatter.compactVideoName(it) } ?: stringResource(R.string.player_no_result),
                 icon = Icons.Rounded.CheckCircle
             )
         }
