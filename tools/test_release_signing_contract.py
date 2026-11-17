@@ -23,7 +23,7 @@ class SignedReleaseContractTest(unittest.TestCase):
         self.assertIn('applicationId = "com.transvibe.app"', gradle)
         version_code = re.search(r"\bversionCode\s*=\s*(\d+)", gradle)
         self.assertIsNotNone(version_code)
-        self.assertGreaterEqual(int(version_code.group(1)), 3)
+        self.assertGreaterEqual(int(version_code.group(1)), 4)
         self.assertRegex(gradle, r'versionName\s*=\s*"1\.0\.2"')
 
     def test_secret_passwords_never_embedded_in_gradle(self):
