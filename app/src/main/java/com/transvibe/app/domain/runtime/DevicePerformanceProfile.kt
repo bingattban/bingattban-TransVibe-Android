@@ -40,6 +40,10 @@ object DevicePerformanceCompatibility {
             append(':').append(model.variant)
             append(':').append(model.performanceTier.name)
             append(':').append(if (model.englishOnly) "en" else "multi")
+            // Two user-imported models may share a broad tier/variant/size.
+            // Measurements belong to exact weights, never another model.
+            append(":id=").append(model.id)
+            append(":weights=").append(model.localIntegrityFingerprint.take(16))
             if (model.performanceTier == ModelPerformanceTier.VERY_HEAVY) {
                 // Custom/large variants can differ materially even when their broad tier matches.
                 append(':').append(model.fileSizeBytes / (16L * 1024L * 1024L))

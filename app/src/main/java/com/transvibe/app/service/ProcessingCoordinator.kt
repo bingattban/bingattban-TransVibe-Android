@@ -914,6 +914,9 @@ internal class ProcessingCoordinator(
             checkpoints.checkpoint(jobId, 5, ProcessingStage.PREPARING_AUDIO)
             onProgress("تجهيز الصوت", 5)
             coroutineScope {
+                // MediaCodec can report many identical progress percentages.
+                // Avoid redundant Android notification/Binder work per decoded buffer.
+                val extractionProgressGate = com.transvibe.app.domain.runtime.DistinctProgressGate()
                 val audioChunks = Channel<AudioDecoder.AudioChunk>(capacity = tuning.channelCapacity)
                 val producer = launch(AppDispatchers.io) {
                     val decoderStartedNs = System.nanoTime()
@@ -925,7 +928,9 @@ internal class ProcessingCoordinator(
                                     val ratio = processedUs.toDouble() / totalUs.toDouble()
                                     (5 + ratio * 15).roundToInt().coerceIn(5, 20)
                                 } else 8
-                                onProgress("استخراج الصوت", p)
+                                if (extractionProgressGate.shouldEmit("استخراج الصوت", p)) {
+                                    onProgress("استخراج الصوت", p)
+                                }
                             }
                         }
                         var emittedAnyChunk = false
