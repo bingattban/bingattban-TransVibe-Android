@@ -26,11 +26,33 @@ class SilenceAwareChunkBoundarySelector {
         val frame = (sampleRateHz * 20 / 1_000).coerceAtLeast(1)
         val window = boundaryWindowSamples.coerceAtLeast(frame)
         val energies = ArrayList<Pair<Int, Double>>()
+        // Consecutive windows overlap heavily (e.g. 160ms wide every 20ms).
+        // Reuse the common energy instead of scanning those same PCM frames
+        // eight times on every call into the chunk-boundary selector.
+        var previousFrom = -1
+        var previousTo = -1
+        var windowEnergy = 0.0
+        fun squaredEnergy(from: Int, to: Int): Double {
+            if (to <= from) return 0.0
+            val value = rms(from, to)
+            return value * value * (to - from)
+        }
         var center = searchStart
         while (center <= searchEnd) {
             val from = (center - window / 2).coerceAtLeast(0)
             val to = (center + window / 2).coerceAtMost(sampleCount)
-            energies += center to rms(from, to)
+            windowEnergy = if (previousFrom >= 0 && from >= previousFrom &&
+                from <= previousTo && to >= previousTo
+            ) {
+                val removed = squaredEnergy(previousFrom, from)
+                val appended = squaredEnergy(previousTo, to)
+                (windowEnergy - removed + appended).coerceAtLeast(0.0)
+            } else {
+                squaredEnergy(from, to)
+            }
+            energies += center to kotlin.math.sqrt(windowEnergy / (to - from).coerceAtLeast(1))
+            previousFrom = from
+            previousTo = to
             center += frame
         }
         if (energies.isEmpty()) return if (force) searchEnd else null
