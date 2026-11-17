@@ -41,6 +41,32 @@ class SilenceAwareChunkBoundarySelectorTest {
         assertTrue(forced in 32_700..33_300)
     }
 
+    @Test
+    fun energySearchScansOnlyNewPcmSamplesInsteadOfRepeatingEntireOverlappingWindows() {
+        val samples = tone(seconds = 35, amplitude = 0.08)
+        var sampleReads = 0
+        val boundary = selector.select(
+            sampleCount = samples.size,
+            minimumSamples = 20 * rate,
+            targetSamples = 30 * rate,
+            maximumSamples = 35 * rate,
+            boundaryWindowSamples = 160,
+            sampleRateHz = rate,
+            force = true,
+            rms = { from, to ->
+                sampleReads += to - from
+                var energy = 0.0
+                for (i in from until to) energy += samples[i].toDouble() * samples[i]
+                sqrt(energy / (to - from).coerceAtLeast(1))
+            }
+        )
+        requireNotNull(boundary)
+        assertTrue(boundary in 20_000..35_000)
+        // The old algorithm re-read 160 samples for every 20-sample window,
+        // roughly 120k sample reads. Incremental energy reuses overlapping data.
+        assertTrue("redundant RMS reads: $sampleReads", sampleReads < 45_000)
+    }
+
     private fun select(
         samples: FloatArray,
         minSec: Int,
